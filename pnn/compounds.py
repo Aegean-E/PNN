@@ -185,7 +185,9 @@ def _build_compound(values: Mapping[str, str], where: str) -> Compound:
     )
 
 
-def parse_compounds(rows: Iterable[Mapping[str, str]], source: str = "input") -> List[Compound]:
+def parse_compounds(
+    rows: Iterable[Mapping[str, str]], source: str = "input", allow_duplicates: bool = False
+) -> List[Compound]:
     """Turn raw CSV rows into compound records; raise CompoundError on the first bad row."""
     compounds: List[Compound] = []
     seen: Dict[str, int] = {}
@@ -199,19 +201,20 @@ def parse_compounds(rows: Iterable[Mapping[str, str]], source: str = "input") ->
                 values[field] = "" if value is None else str(value).strip()
         where = f"{source} row {row_number}"
         compound = _build_compound(values, where)
-        if compound.compound_id in seen:
-            raise CompoundError(
-                f"{where}: duplicate compound_id '{compound.compound_id}' "
-                f"(first seen on row {seen[compound.compound_id]})"
-            )
-        seen[compound.compound_id] = row_number
+        if not allow_duplicates:
+            if compound.compound_id in seen:
+                raise CompoundError(
+                    f"{where}: duplicate compound_id '{compound.compound_id}' "
+                    f"(first seen on row {seen[compound.compound_id]})"
+                )
+            seen[compound.compound_id] = row_number
         compounds.append(compound)
     if not compounds:
         raise CompoundError(f"{source}: no compound rows found")
     return compounds
 
 
-def load_compounds(path: Path) -> List[Compound]:
+def load_compounds(path: Path, allow_duplicates: bool = False) -> List[Compound]:
     """Read a UTF-8 CSV file and return its compound records."""
     path = Path(path)
     if not path.is_file():
@@ -228,4 +231,4 @@ def load_compounds(path: Path) -> List[Compound]:
         raise CompoundError(f"{path}: malformed CSV: {exc}") from exc
     except OSError as exc:
         raise CompoundError(f"{path}: cannot read file: {exc}") from exc
-    return parse_compounds(rows, source=str(path))
+    return parse_compounds(rows, source=str(path), allow_duplicates=allow_duplicates)

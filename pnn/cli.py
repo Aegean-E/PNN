@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import csv
-import json
-import os
 import sys
-import tempfile
 from pathlib import Path
 from typing import List, Optional, Sequence
 
 from .compounds import CompoundError, load_compounds
+from .reports import write_csv, write_json
 from .rules import CORE_CRITERIA, HARD_REJECT_CRITERIA
 from .screen import TIER_ORDER, ScreenResult, screen_compounds, summarize
 
@@ -87,52 +84,6 @@ def _row(result: ScreenResult) -> dict:
     }
 
 
-def _atomic_write(path: Path):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", newline="", delete=False, dir=str(path.parent), prefix=f".{path.name}."
-    )
-    return path, handle
-
-
-def _finish_write(path: Path, handle) -> None:
-    handle.flush()
-    os.fsync(handle.fileno())
-    handle.close()
-    try:
-        os.replace(handle.name, path)
-    except OSError:
-        Path(handle.name).unlink(missing_ok=True)
-        raise
-
-
-def _write_csv(path: Path, results: Sequence[ScreenResult]) -> None:
-    destination, handle = _atomic_write(path)
-    try:
-        writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS)
-        writer.writeheader()
-        for result in results:
-            writer.writerow(_row(result))
-    except BaseException:
-        handle.close()
-        Path(handle.name).unlink(missing_ok=True)
-        raise
-    _finish_write(destination, handle)
-
-
-def _write_json(path: Path, report: dict) -> None:
-    destination, handle = _atomic_write(path)
-    try:
-        json.dump(report, handle, indent=2, sort_keys=True)
-        handle.write("\n")
-    except BaseException:
-        handle.close()
-        Path(handle.name).unlink(missing_ok=True)
-        raise
-    _finish_write(destination, handle)
-
-
 def _filter(results: Sequence[ScreenResult], min_tier: Optional[str]) -> List[ScreenResult]:
     if min_tier is None:
         return list(results)
@@ -164,9 +115,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         compounds = load_compounds(Path(args.input))
         results = screen_compounds(compounds)
         kept = _filter(results, args.min_tier)
-        _write_csv(out, kept)
+        write_csv(out, CSV_FIELDS, [_row(result) for result in kept])
         if args.json_path:
-            _write_json(Path(args.json_path), _report(results, kept, args.input, out))
+            write_json(Path(args.json_path), _report(results, kept, args.input, out))
     except CompoundError as exc:
         return _failure(
             str(exc),

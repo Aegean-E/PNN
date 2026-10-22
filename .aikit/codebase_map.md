@@ -6,11 +6,11 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `11`
-- **Total Classes**: `10`
-- **Total Top-Level Functions**: `39`
-- **Total Class Methods**: `39`
-- **Total Source Lines**: `1128`
+- **Total Python Modules**: `19`
+- **Total Classes**: `24`
+- **Total Top-Level Functions**: `73`
+- **Total Class Methods**: `80`
+- **Total Source Lines**: `2450`
 
 ---
 
@@ -19,7 +19,7 @@
 ### [`pnn/__init__.py`](pnn/__init__.py)
 > *Phase 2 CNS/BBB property screening for the PNN research project.*
 
-**Size**: `14` lines (`372` bytes)
+**Size**: `23` lines (`647` bytes)
 
 ---
 
@@ -33,15 +33,11 @@
 ### [`pnn/cli.py`](pnn/cli.py)
 > *Command-line entry point for the PNN Phase 2 screening pipeline.*
 
-**Size**: `189` lines (`6271` bytes)
+**Size**: `140` lines (`4985` bytes)
 
 **Functions:**
 - `def build_parser()`
 - `def _row(result)`
-- `def _atomic_write(path)`
-- `def _finish_write(path, handle)`
-- `def _write_csv(path, results)`
-- `def _write_json(path, report)`
 - `def _filter(results, min_tier)`
 - `def _report(results, kept, source, out)`
 - `def _failure(what, why, fix)`
@@ -52,7 +48,7 @@
 ### [`pnn/compounds.py`](pnn/compounds.py)
 > *Compound records and CSV ingestion for the PNN screening pipeline.*
 
-**Size**: `231` lines (`7874` bytes)
+**Size**: `234` lines (`8036` bytes)
 
 **Classes:**
 - `class CompoundError` - *Raised when input cannot be interpreted as a compound record.*
@@ -64,8 +60,101 @@
 - `def _optional_number(values, field, where)`
 - `def _charge(raw)`
 - `def _build_compound(values, where)`
-- `def parse_compounds(rows, source)` - *Turn raw CSV rows into compound records; raise CompoundError on the first bad row.*
-- `def load_compounds(path)` - *Read a UTF-8 CSV file and return its compound records.*
+- `def parse_compounds(rows, source, allow_duplicates)` - *Turn raw CSV rows into compound records; raise CompoundError on the first bad row.*
+- `def load_compounds(path, allow_duplicates)` - *Read a UTF-8 CSV file and return its compound records.*
+
+---
+
+### [`pnn/curate.py`](pnn/curate.py)
+> *Command-line merge and diversity curation of PNN compound libraries.*
+
+**Size**: `163` lines (`5369` bytes)
+
+**Functions:**
+- `def _positive_int(text)`
+- `def _bin_width(text)`
+- `def _row(candidate, width)`
+- `def build_parser()`
+- `def _failure(what, why, fix)`
+- `def main(argv)`
+
+---
+
+### [`pnn/curation.py`](pnn/curation.py)
+> *Merge, deduplicate and diversify compound libraries for PNN Phase 2.*
+
+**Size**: `170` lines (`6038` bytes)
+
+**Classes:**
+- `class CurationError` - *Raised when libraries cannot be merged or curated safely.*
+- `class Candidate` - *A compound with its source file and screening verdict.*
+
+**Functions:**
+- `def _preference(candidate)`
+- `def _merge(left, right)` - *Keep the better record, filling a blank SMILES/name from the other source.*
+- `def prepare_candidates(inputs)` - *Screen every input compound while keeping its source provenance.*
+- `def deduplicate(candidates)` - *Collapse duplicate IDs first, then exact non-empty SMILES strings.*
+- `def property_bin(compound, width)` - *Bin the six core properties on a normalized 0..1 grid.*
+- `def _validate(min_tier, per_bin, bin_width, max_compounds)`
+- `def curate(candidates, min_tier, per_bin, bin_width, max_compounds)` - *Filter by tier, cap each property bin, then apply the global size limit.*
+
+---
+
+### [`pnn/docking.py`](pnn/docking.py)
+> *Docking-score ingestion and consensus ranking for PNN Phase 2.*
+
+**Size**: `273` lines (`10305` bytes)
+
+**Classes:**
+- `class DockingError` - *Raised when docking input cannot be interpreted.*
+- `class DockingScore` - *One docking result for one compound against one target.*
+- `class DockingRank` - *A docking score with its normalized consensus quality.*
+- `class CompoundRank` - *The best target row for one compound and how many targets it reached.*
+
+**Functions:**
+- `def _token(name)`
+- `def _field(name)`
+- `def _number(raw, field, where)`
+- `def _optional(values, field, where)`
+- `def _build(values, where)`
+- `def parse_docking_scores(rows, source)` - *Turn raw CSV rows into docking records; refuse duplicates and unusable rows.*
+- `def load_docking_scores(path)` - *Read a UTF-8 docking CSV.*
+- `def load_screen_table(path)` - *Read the screening ranked CSV into a compound_id keyed table.*
+- `def filter_scores(scores, max_rmsd, min_vina)` - *Drop rows without Vina or outside the optional RMSD/Vina limits.*
+- `def normalize_scores(scores)` - *Scale each scoring method to 0..1 and combine available methods by weight.*
+- `def aggregate_best(ranks)` - *Keep each compound's highest-consensus target and count its docked targets.*
+
+---
+
+### [`pnn/rank.py`](pnn/rank.py)
+> *Command-line consensus ranking of docking results for PNN Phase 2.*
+
+**Size**: `245` lines (`8401` bytes)
+
+**Classes:**
+- `class ShortlistRow` - *One ranked compound ready for CSV output.*
+  - Method `.as_row()`
+
+**Functions:**
+- `def _property_score(info)`
+- `def _selected(best, screen, min_tier)` - *Filter aggregated compounds by screening evidence and sort them by consensus.*
+- `def build_shortlist(scores, screen, min_tier, max_rmsd, min_vina)` - *Return shortlist rows and a summary of what each filter removed.*
+- `def build_parser()`
+- `def _failure(what, why, fix)`
+- `def main(argv)`
+
+---
+
+### [`pnn/reports.py`](pnn/reports.py)
+> *Atomic CSV and JSON report writers shared by the PNN command line tools.*
+
+**Size**: `56` lines (`1682` bytes)
+
+**Functions:**
+- `def _open_temp(path)`
+- `def _finish(path, handle)`
+- `def write_csv(path, fieldnames, rows)` - *Write `rows` as CSV to a temporary file, then replace `path` atomically.*
+- `def write_json(path, report)` - *Write `report` as JSON to a temporary file, then replace `path` atomically.*
 
 ---
 
@@ -136,6 +225,60 @@
 
 ---
 
+### [`tests/test_curation.py`](tests/test_curation.py)
+> *Unit and CLI tests for compound-library curation.*
+
+**Size**: `181` lines (`6910` bytes)
+
+**Classes:**
+- `class DeduplicationTest`
+  - Method `.test_duplicate_id_keeps_the_better_candidate()`
+  - Method `.test_better_record_keeps_smiles_from_the_other_source()`
+  - Method `.test_same_id_with_different_smiles_is_refused()`
+  - Method `.test_same_smiles_with_different_ids_is_collapsed()`
+  - Method `.test_blank_smiles_do_not_collapse_distinct_ids()`
+  - Method `.test_prepare_candidates_keeps_sources()`
+- `class CurationTest`
+  - Method `.test_tier_filter_removes_rejected_candidates()`
+  - Method `.test_per_bin_cap_keeps_one_best_per_property_cell()`
+  - Method `.test_max_compounds_truncates_and_reports()`
+  - Method `.test_property_bin_is_deterministic()`
+  - Method `.test_invalid_bin_width_is_refused()`
+- `class CurateCliTest`
+  - Method `.setUp()`
+  - Method `.run_main(*argv)`
+  - Method `.read_rows(path)`
+  - Method `.test_merges_deduplicates_and_filters()`
+  - Method `.test_conflicting_id_returns_one()`
+  - Method `.test_no_eligible_compounds_returns_one()`
+
+**Functions:**
+- `def compound(compound_id, smiles, **overrides)`
+- `def candidate(compound_id, source, smiles, **overrides)`
+
+---
+
+### [`tests/test_docking.py`](tests/test_docking.py)
+> *Unit tests for docking ingestion and consensus normalization.*
+
+**Size**: `113` lines (`4470` bytes)
+
+**Classes:**
+- `class DockingIngestionTest`
+  - Method `.test_aliases_units_and_optional_columns()`
+  - Method `.test_row_needs_a_score()`
+  - Method `.test_row_needs_target()`
+  - Method `.test_duplicate_compound_target_is_refused()`
+  - Method `.test_non_finite_score_is_refused()`
+  - Method `.test_negative_rmsd_is_refused()`
+- `class ConsensusTest`
+  - Method `.test_vina_only_is_normalized_to_zero_and_one()`
+  - Method `.test_multiple_methods_are_weighted_and_coverage_is_reported()`
+  - Method `.test_best_target_is_kept_and_targets_are_counted()`
+  - Method `.test_filters_drop_missing_vina_and_limit_breakers()`
+
+---
+
 ### [`tests/test_docs.py`](tests/test_docs.py)
 > *Regression shield for the PNN research documents (PRINCIPLE-005, PRINCIPLE-014).*
 
@@ -145,6 +288,34 @@
 - `class ProjectDocsTest`
   - Method `.test_required_documents_exist()`
   - Method `.test_readme_tree_lists_only_existing_paths()`
+
+---
+
+### [`tests/test_rank.py`](tests/test_rank.py)
+> *Unit and CLI tests for the docking consensus shortlist.*
+
+**Size**: `158` lines (`6522` bytes)
+
+**Classes:**
+- `class ShortlistTest`
+  - Method `.test_tier_filter_and_consensus_order()`
+  - Method `.test_rmsd_filter_removes_a_target_row()`
+  - Method `.test_vina_filter_removes_weak_rows()`
+  - Method `.test_compound_missing_from_screen_is_skipped()`
+  - Method `.test_docking_only_mode_has_no_tier()`
+- `class RankCliTest`
+  - Method `.setUp()`
+  - Method `.run_main(*argv)`
+  - Method `.read_rows(path)`
+  - Method `.test_cli_writes_shortlist_and_json()`
+  - Method `.test_cli_returns_one_when_filters_remove_everything()`
+  - Method `.test_cli_returns_one_for_invalid_docking()`
+  - Method `.test_screen_table_loader_reads_tier_and_score()`
+  - Method `.test_module_entry_point_runs_main()`
+
+**Functions:**
+- `def screen_table()`
+- `def scores()`
 
 ---
 

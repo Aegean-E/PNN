@@ -308,6 +308,11 @@ rdock -r receptor.pdbqt -l ligand.pdbqt \
 4. Top 10: MM-GBSA refinement (Prime MM-GBSA or amber)
 5. Rank by: 0.5 × Vina + 0.3 × Glide + 0.2 × MM-GBSA score
 
+**Executable ranking**: export the per-target scores to the contract in
+[docking_ranking.md](docking_ranking.md) and run `python -m pnn.rank`. The tool
+min-max normalizes each engine within the run before applying these weights, so
+raw values with different scales are not summed directly.
+
 ---
 
 ## 4. MD Simulation Protocols

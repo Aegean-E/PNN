@@ -1,12 +1,12 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-phase2-review-delivery",
+    "task_id": "pnn-phase2-curation",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792696379.3908808,
-    "completed_at": 1792696408.7108598
+    "updated_at": 1792698884.4696686,
+    "completed_at": 1792698884.6412163
   },
   "checkpoints": [
     {
@@ -62,6 +62,76 @@
       "status": "completed",
       "timestamp": 1792696408.7108607,
       "timestamp_str": "2026-10-22 22:13:28"
+    },
+    {
+      "task_id": "pnn-phase2-docking-ranker",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/5] Add a docking-result consensus ranker: CSV contract, normalized multi-target scoring, screening-tier join, CLI, tests and docs.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792697014.6325796,
+      "timestamp_str": "2026-10-22 22:23:34",
+      "impact_assessment": {
+        "why": "Phase 2 property triage now produces candidates, but the documented Vina/Glide/MM-GBSA consensus workflow has no executable aggregation step.",
+        "benefits": "Turns heterogeneous per-target docking outputs into one transparent, reproducible shortlist and prevents ranking by raw scores from incomparable engines.",
+        "risks": "contract: new docking CSV and shortlist schema; dependency: none, standard library only; concurrency: reports are written atomically; state: no persisted state beyond generated reports.",
+        "mitigation": "Document the contract and normalization limits, require Vina as the primary score, expose coverage, and cover normalization, filters and joins with tests."
+      }
+    },
+    {
+      "task_id": "pnn-phase2-docking-ranker",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/5] Verification: 52 tests pass; rank and screen help under 200ms; PNN gates 4/4; checklists: passed.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792698121.640339,
+      "timestamp_str": "2026-10-22 22:42:01"
+    },
+    {
+      "task_id": "pnn-phase2-docking-ranker",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-phase2-docking-ranker' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792698138.055962,
+      "timestamp_str": "2026-10-22 22:42:18"
+    },
+    {
+      "task_id": "pnn-phase2-curation",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/5] Add a compound-library curation CLI: provenance-aware merge, ID/SMILES deduplication, tier filtering, property-space binning, caps, tests and docs.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792698249.7619548,
+      "timestamp_str": "2026-10-22 22:44:09",
+      "impact_assessment": {
+        "why": "Phase 2 needs a reproducible way to merge vendor and repurposing libraries into a defined 50K-200K screening set without duplicates or property-space clumps.",
+        "benefits": "Produces a traceable curated library from multiple sources and keeps the docking budget focused on diverse, tier-qualified compounds.",
+        "risks": "contract: new curated CSV schema; dependency: none, standard library only; concurrency: atomic report writes; state: no persisted state beyond generated reports.",
+        "mitigation": "Validate ID collisions, document exact-SMILES limits and binning semantics, expose every removal count in JSON, and cover merge, dedupe, filter and cap boundaries with tests."
+      }
+    },
+    {
+      "task_id": "pnn-phase2-curation",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/5] Verification: 66 tests pass; curate help under 200ms; PNN gates 4/4; checklists: passed.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792698884.4696686,
+      "timestamp_str": "2026-10-22 22:54:44"
+    },
+    {
+      "task_id": "pnn-phase2-curation",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-phase2-curation' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792698884.6412177,
+      "timestamp_str": "2026-10-22 22:54:44"
     }
   ]
 }

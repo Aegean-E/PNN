@@ -37,28 +37,40 @@ PNN/
 │   └── oral_bioavailability.md    <- Oral drug design principles
 ├── computational/                 <- Computational approaches
 │   ├── docking_protocols.md       <- Molecular docking procedures
+│   ├── docking_ranking.md         <- Docking consensus contract and normalization
+│   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
 │   └── screening_pipeline.md      <- Phase 2 property screening contract and rules
 ├── experimental/                  <- Experimental validation
 │   └── experimental_protocols.md  <- In vitro/in vivo assay protocols
 ├── data/                          <- Data storage
 │   ├── compounds/                 <- Compound libraries
 │   │   └── screening_template.csv  <- Input header for the screening pipeline
+│   ├── docking/                   <- Docking results
+│   │   └── scores_template.csv    <- Input header for the consensus ranker
 │   ├── assays/                    <- Assay results (empty until populated)
 │   └── literature/                <- Extracted literature data (empty until populated)
 ├── docs/                          <- Documentation
 │   ├── cold_start_guide.md        <- AI cold-start instructions
 │   └── reproducibility.md         <- Reproducibility standards
-├── pnn/                           <- Phase 2 screening package (standard library only)
+├── pnn/                           <- Phase 2 pipeline (standard library only)
 │   ├── __init__.py                <- Public API
 │   ├── __main__.py                <- `python -m pnn` entry point
-│   ├── cli.py                     <- CSV/JSON IO and command contract
+│   ├── cli.py                     <- Screening command contract
 │   ├── compounds.py               <- Compound record and CSV ingestion
+│   ├── curate.py                  <- `python -m pnn.curate` library command
+│   ├── curation.py                <- Merge, dedupe and property-space caps
+│   ├── docking.py                 <- Docking ingestion and consensus normalization
+│   ├── rank.py                    <- `python -m pnn.rank` shortlist command
+│   ├── reports.py                 <- Atomic CSV/JSON writers
 │   ├── rules.py                   <- CNS/BBB property rules
 │   └── screen.py                  <- Tiering, scoring and ranking
-└── tests/                         <- Regression shield (docs and screening behaviour)
+└── tests/                         <- Regression shield (docs and pipeline behaviour)
     ├── __init__.py                <- Makes the test package importable
-    ├── test_cli.py                <- Command contract and output files
+    ├── test_cli.py                <- Screening command contract
+    ├── test_curation.py           <- Merge, dedupe, bins and CLI contract
+    ├── test_docking.py            <- Docking ingestion and normalization
     ├── test_docs.py               <- Required docs and README tree paths
+    ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
     └── test_screen.py             <- Tiering, ranking and CSV ingestion
 ```
@@ -79,6 +91,39 @@ The required columns are `compound_id`, `mw`, `logp`, `tpsa`, `hbd`, `hba` and
 `rotatable_bonds`; optional ADMET and efficacy fields are listed with the full
 rule table in [computational/screening_pipeline.md](computational/screening_pipeline.md).
 Missing optional values become `UNKNOWN` and are never treated as passes.
+
+## Phase 2: Docking Consensus Shortlist
+
+`python -m pnn.rank` joins per-target docking results and ranks compounds by a
+normalized Vina/Glide/MM-GBSA consensus. Raw engine scores are min-max scaled
+within the run and renormalized for missing methods; only rows with a Vina score
+enter the shortlist.
+
+```bash
+python -m pnn.rank data/docking/scores_template.csv \
+    --screen ranked_compounds.csv \
+    --out shortlist.csv --json shortlist_summary.json --max-rmsd 2.0
+```
+
+`--min-tier` (default `B`) keeps compounds that passed property triage, and
+`coverage` shows whether Vina, Glide and MM-GBSA were all available. The contract,
+weights and limits are in [computational/docking_ranking.md](computational/docking_ranking.md).
+
+## Phase 2: Library Curation
+
+`python -m pnn.curate` merges compound CSVs, resolves duplicate IDs and exact
+SMILES, applies the screening-tier floor, and caps each six-property bin so the
+screening set is diverse in property space.
+
+```bash
+python -m pnn.curate vendor_a.csv vendor_b.csv \
+    --out curated_library.csv --json curation_summary.json \
+    --min-tier B --per-bin 25 --max-compounds 200000
+```
+
+Every kept row retains its `source` path and `property_bin`; the JSON summary
+reports duplicate, tier and cap removals. Exact-SMILES matching is not chemical
+canonicalization; see [computational/library_curation.md](computational/library_curation.md).
 
 ## Core Scientific Hypothesis
 Hypothalamic PNNs (primarily composed of chondroitin sulfate proteoglycans - CSPGs) create a physical and signaling barrier that:
@@ -231,5 +276,5 @@ All references stored in `data/literature/references.bib` (BibTeX format) with t
 ---
 
 *Last Updated: 2026-10-22*
-*Version: 1.1.0*
+*Version: 1.3.0*
 *Compatible with: Recursive Language Model cold starts*
