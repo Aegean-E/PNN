@@ -9,3 +9,4 @@ Persisted state carries a format version. A loader refuses a version it does not
 without modifying or quarantining that file; older versions migrate when a migration exists.
 
 ## Rules
+- **G-001** (ADR-001): Screening tiers are triage only; never report a compound as BBB-penetrant or efficacious without measured permeability and PNN-softening data.

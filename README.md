@@ -4,7 +4,7 @@ Oral, blood-brain barrier-penetrant agents that soften hypothalamic perineuronal
 
 ## ⚡ 30-Second Cold-Start Quick Reference
 
-- **Runtime Prerequisites**: Python 3.10+ (for AIKit verification tooling; the research documents themselves need no runtime) and git 2.30+ (for version control).
+- **Runtime Prerequisites**: Python 3.10+ (standard library only, for the screening pipeline and AIKit verification) and git 2.30+ (for version control).
 - **Canonical Regression Shield Gate**:
   ```bash
   python -m unittest discover -s tests -t .
@@ -36,20 +36,49 @@ PNN/
 │   ├── bbb_penetration_rules.md   <- BBB penetration guidelines
 │   └── oral_bioavailability.md    <- Oral drug design principles
 ├── computational/                 <- Computational approaches
-│   └── docking_protocols.md       <- Molecular docking procedures
+│   ├── docking_protocols.md       <- Molecular docking procedures
+│   └── screening_pipeline.md      <- Phase 2 property screening contract and rules
 ├── experimental/                  <- Experimental validation
 │   └── experimental_protocols.md  <- In vitro/in vivo assay protocols
 ├── data/                          <- Data storage
-│   ├── compounds/                 <- Compound libraries (empty until populated)
+│   ├── compounds/                 <- Compound libraries
+│   │   └── screening_template.csv  <- Input header for the screening pipeline
 │   ├── assays/                    <- Assay results (empty until populated)
 │   └── literature/                <- Extracted literature data (empty until populated)
 ├── docs/                          <- Documentation
 │   ├── cold_start_guide.md        <- AI cold-start instructions
 │   └── reproducibility.md         <- Reproducibility standards
-└── tests/                         <- Documentation regression shield
+├── pnn/                           <- Phase 2 screening package (standard library only)
+│   ├── __init__.py                <- Public API
+│   ├── __main__.py                <- `python -m pnn` entry point
+│   ├── cli.py                     <- CSV/JSON IO and command contract
+│   ├── compounds.py               <- Compound record and CSV ingestion
+│   ├── rules.py                   <- CNS/BBB property rules
+│   └── screen.py                  <- Tiering, scoring and ranking
+└── tests/                         <- Regression shield (docs and screening behaviour)
     ├── __init__.py                <- Makes the test package importable
-    └── test_docs.py               <- Checks required docs and README tree paths
+    ├── test_cli.py                <- Command contract and output files
+    ├── test_docs.py               <- Required docs and README tree paths
+    ├── test_rules.py              <- Rule boundaries
+    └── test_screen.py             <- Tiering, ranking and CSV ingestion
 ```
+
+## Phase 2: Property Screening Pipeline
+
+`pnn` applies the project's CNS/BBB design windows to a compound CSV and ranks the
+candidates into tiers `A`, `B`, `C` and `Reject`. It is a triage step, not a
+permeability or efficacy model: tier labels decide which compounds reach docking
+and assays, never whether a compound is claimed to be BBB-penetrant.
+
+```bash
+python -m pnn data/compounds/screening_template.csv --out ranked_compounds.csv
+python -m pnn compounds.csv --out ranked.csv --json summary.json --min-tier B
+```
+
+The required columns are `compound_id`, `mw`, `logp`, `tpsa`, `hbd`, `hba` and
+`rotatable_bonds`; optional ADMET and efficacy fields are listed with the full
+rule table in [computational/screening_pipeline.md](computational/screening_pipeline.md).
+Missing optional values become `UNKNOWN` and are never treated as passes.
 
 ## Core Scientific Hypothesis
 Hypothalamic PNNs (primarily composed of chondroitin sulfate proteoglycans - CSPGs) create a physical and signaling barrier that:
@@ -201,6 +230,6 @@ All references stored in `data/literature/references.bib` (BibTeX format) with t
 
 ---
 
-*Last Updated: 2026-10-11*
-*Version: 1.0*
+*Last Updated: 2026-10-22*
+*Version: 1.1.0*
 *Compatible with: Recursive Language Model cold starts*
