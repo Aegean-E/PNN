@@ -1,49 +1,14 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-preclinical-studio-sar-v1",
+    "task_id": "pnn-one-click-and-mpo-v1",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792858569.1116922,
-    "completed_at": 1792858572.3424995
+    "updated_at": 1792859221.469135,
+    "completed_at": 1792859225.4382627
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-phase2-screening",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Build a stdlib-only Phase 2 CNS/BBB property screening pipeline: contract, rules, ranking, CLI, tests, docs.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792695164.861704,
-      "timestamp_str": "2026-10-22 21:52:44",
-      "impact_assessment": {
-        "why": "Phase 2 needs a reproducible triage step before docking; the repository currently holds only prose protocols.",
-        "benefits": "Turns the BBB/CNS criteria into an executable, tested filter and gives every subsequent docking run a consistent candidate set.",
-        "risks": "contract: new CSV schema and tier vocabulary; dependency: none, standard library only; concurrency: file outputs use temp+replace; state: no persisted state beyond generated reports.",
-        "mitigation": "Freeze the contract in docs and ADR-001, cover boundaries with unit tests, and keep generated outputs opt-in via --out/--json."
-      }
-    },
-    {
-      "task_id": "pnn-phase2-screening",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/5] Verification: 28 tests pass; PNN gates 4/4 (test, hygiene, guidelines, secrets); checklists: passed.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792695903.766695,
-      "timestamp_str": "2026-10-22 22:05:03"
-    },
-    {
-      "task_id": "pnn-phase2-screening",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-phase2-screening' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792695916.8542697,
-      "timestamp_str": "2026-10-22 22:05:16"
-    },
     {
       "task_id": "pnn-phase2-review-delivery",
       "phase": "phase 4",
@@ -237,6 +202,41 @@
       "status": "completed",
       "timestamp": 1792858572.3425012,
       "timestamp_str": "2026-10-24 19:16:12"
+    },
+    {
+      "task_id": "pnn-one-click-and-mpo-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/4] Add one-click turnkey discovery runner (pnn/runner.py, run.py, start.bat, start.sh) and Phase 5 multiparametric optimization engine (pnn/mpo.py)",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792858761.463135,
+      "timestamp_str": "2026-10-24 19:19:21",
+      "impact_assessment": {
+        "why": "PNN has modular CLI pipelines for in silico triage, docking, in vitro assays, preclinical PK/PD, and SAR, but lacks a turnkey one-click launcher for rapid execution and visualization, and lacks a unified Phase 5 Multiparametric Optimization (MPO) desirability scoring engine for candidate selection.",
+        "benefits": "One-click start enables instant execution of the full discovery pipeline and launches the interactive dashboard in <1s; Phase 5 CNS MPO and Derringer-Suich composite desirability index systematically ranks clinical candidates across potency, BBB penetration, oral F, and safety margins.",
+        "risks": "contract: new runner and MPO CLI options and output schemas; dependency: none, Python standard library only; concurrency: atomic output writers; state: no persistent state outside generated reports.",
+        "mitigation": "Thorough unit and CLI tests, error remediation triads, and registering ADR-007."
+      }
+    },
+    {
+      "task_id": "pnn-one-click-and-mpo-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 129 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); one-click launcher and Phase 5 MPO engine verified; checklists: passed",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792859221.469135,
+      "timestamp_str": "2026-10-24 19:27:01"
+    },
+    {
+      "task_id": "pnn-one-click-and-mpo-v1",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-one-click-and-mpo-v1' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792859225.4382644,
+      "timestamp_str": "2026-10-24 19:27:05"
     }
   ]
 }

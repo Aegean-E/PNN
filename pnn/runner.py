@@ -1,0 +1,276 @@
+"""One-click turnkey discovery pipeline runner for PNN."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+import time
+import webbrowser
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional, Sequence
+
+from .assay import (
+    HIT_FIELDS,
+    load_cytotoxicity_data,
+    load_degradation_data,
+    load_permeability_data,
+    qualify_leads,
+    render_assay_report,
+)
+from .preclinical import (
+    PRECLINICAL_FIELDS,
+    evaluate_candidates,
+    load_pd_data,
+    load_pk_data,
+    render_preclinical_report,
+)
+from .rank import RANK_FIELDS
+from .reports import write_csv, write_json, write_text
+from .sar import (
+    SCAFFOLD_CLUSTER_FIELDS,
+    analyze_sar,
+    load_compounds as load_sar_compounds,
+    render_sar_report,
+)
+from .selection import PipelineError, render_lead_report, select_leads
+from .studio import (
+    generate_docking_heatmap_svg,
+    generate_pk_curve_svg,
+    generate_radar_svg,
+    load_studio_data,
+    render_studio_html,
+)
+
+
+class RunnerError(ValueError):
+    """Raised when one-click pipeline runner cannot execute or find input data."""
+
+
+@dataclass(frozen=True)
+class RunSummary:
+    curated_count: int
+    screened_count: int
+    shortlisted_count: int
+    qualified_hits_count: int
+    preclinical_candidates_count: int
+    scaffolds_count: int
+    elapsed_seconds: float
+    output_dir: Path
+    studio_html_path: Path
+
+
+def execute_turnkey_pipeline(
+    vendor_csv: Path,
+    repurposing_csv: Optional[Path],
+    docking_csv: Path,
+    degradation_csv: Optional[Path],
+    permeability_csv: Optional[Path],
+    cytotoxicity_csv: Optional[Path],
+    pk_csv: Optional[Path],
+    pd_csv: Optional[Path],
+    out_dir: Path,
+    min_tier: str = "B",
+    emit_root: bool = False,
+) -> RunSummary:
+    """Execute complete end-to-end PNN discovery workflow from libraries to interactive studio."""
+    start_time = time.perf_counter()
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Curation, Screening, and Docking Consensus Shortlist
+    lib_paths = [str(vendor_csv)]
+    if repurposing_csv and repurposing_csv.is_file():
+        lib_paths.append(str(repurposing_csv))
+
+    try:
+        selection = select_leads(
+            inputs=lib_paths,
+            docking=str(docking_csv),
+            min_tier=min_tier,
+        )
+    except Exception as exc:
+        raise RunnerError(f"Phase 2 lead selection failed: {exc}") from exc
+
+    shortlist = selection.shortlist
+    curated = selection.curated
+    screened = selection.screened
+
+    shortlist_csv = out_dir / "shortlist.csv"
+    write_csv(shortlist_csv, RANK_FIELDS, [s.as_row() for s in shortlist])
+
+    lead_report = render_lead_report(selection, {"min_tier": min_tier})
+    write_text(out_dir / "lead_report.md", lead_report)
+
+    # 2. Phase 3 In Vitro Assay Qualification
+    deg_data = load_degradation_data(degradation_csv) if degradation_csv and degradation_csv.is_file() else {}
+    perm_data = load_permeability_data(permeability_csv) if permeability_csv and permeability_csv.is_file() else {}
+    cyto_data = load_cytotoxicity_data(cytotoxicity_csv) if cytotoxicity_csv and cytotoxicity_csv.is_file() else {}
+
+    qualified = qualify_leads(deg_data, perm_data, cyto_data)
+    qualified_csv = out_dir / "qualified_hits.csv"
+    write_csv(qualified_csv, HIT_FIELDS, [h.as_row() for h in qualified])
+
+    assay_criteria = {
+        "ec50_ceiling_nm": 100.0,
+        "max_deg_floor_pct": 50.0,
+        "min_selectivity_index": 10.0,
+        "pampa_pe_floor": 3.0,
+        "mdck_efflux_ceiling": 3.0,
+    }
+    assay_report = render_assay_report(qualified, assay_criteria)
+    write_text(out_dir / "assay_report.md", assay_report)
+
+    # 3. Phase 4 Preclinical PK/PD Candidate Evaluation
+    pk_profiles = load_pk_data(pk_csv) if pk_csv and pk_csv.is_file() else {}
+    pd_outcomes = load_pd_data(pd_csv) if pd_csv and pd_csv.is_file() else {}
+
+    candidates = evaluate_candidates(pk_profiles, pd_outcomes)
+    candidates_csv = out_dir / "preclinical_candidates.csv"
+    write_csv(candidates_csv, PRECLINICAL_FIELDS, [c.as_row() for c in candidates])
+
+    preclinical_report = render_preclinical_report(candidates, {"min_kp_brain": 0.30})
+    write_text(out_dir / "preclinical_report.md", preclinical_report)
+
+    # 4. SAR & Bemis-Murcko Scaffold Decomposition
+    sar_records = load_sar_compounds(vendor_csv)
+    if repurposing_csv and repurposing_csv.is_file():
+        sar_records.extend(load_sar_compounds(repurposing_csv))
+
+    docking_map = {s.compound_id: s.consensus for s in shortlist}
+    assay_potencies = {h.compound_id: h.ec50_nm for h in qualified}
+    preclinical_exposures = {
+        c.compound_id: {
+            "brain_kp": c.brain_plasma_ratio or 0.0,
+            "oral_f": c.oral_bioavailability_pct or 0.0,
+        }
+        for c in candidates
+    }
+
+    compounds_sar, clusters = analyze_sar(
+        compound_records=sar_records,
+        docking_scores=docking_map,
+        assay_potencies=assay_potencies,
+        preclinical_exposures=preclinical_exposures,
+    )
+
+    sar_clusters_csv = out_dir / "sar_clusters.csv"
+    write_csv(sar_clusters_csv, SCAFFOLD_CLUSTER_FIELDS, [cl.as_row() for cl in clusters])
+
+    sar_report = render_sar_report(compounds_sar, clusters)
+    write_text(out_dir / "sar_report.md", sar_report)
+
+    # 5. Interactive Visualization Studio HTML Dashboard
+    studio_compounds, targets = load_studio_data(
+        compounds_path=vendor_csv,
+        docking_path=docking_csv,
+        assays_path=degradation_csv,
+        pk_path=pk_csv,
+        preclinical_candidates_path=candidates_csv,
+    )
+
+    radar_svg = generate_radar_svg(studio_compounds)
+    heatmap_svg = generate_docking_heatmap_svg(studio_compounds[:7], targets)
+    pk_svg = generate_pk_curve_svg(studio_compounds)
+
+    html_out = render_studio_html(studio_compounds, radar_svg, heatmap_svg, pk_svg)
+    studio_html = out_dir / "studio.html"
+    write_text(studio_html, html_out)
+
+    # Optionally emit turnkey root studio.html for zero-friction access
+    if emit_root:
+        root_studio = Path("studio.html")
+        write_text(root_studio, html_out)
+
+    elapsed = time.perf_counter() - start_time
+    clinical_count = sum(1 for c in candidates if c.status == "CLINICAL_CANDIDATE")
+    confirmed_hit_count = sum(1 for h in qualified if h.status in ("CONFIRMED_HIT", "QUALIFIED_LEAD"))
+
+    return RunSummary(
+        curated_count=len(curated),
+        screened_count=len(screened),
+        shortlisted_count=len(shortlist),
+        qualified_hits_count=confirmed_hit_count,
+        preclinical_candidates_count=clinical_count,
+        scaffolds_count=len(clusters),
+        elapsed_seconds=elapsed,
+        output_dir=out_dir,
+        studio_html_path=studio_html,
+    )
+
+
+def print_run_banner(summary: RunSummary) -> None:
+    """Print terminal summary banner for turnkey runner."""
+    border = "=" * 68
+    print(border)
+    print("  [PNN] TURNKEY DISCOVERY PIPELINE & STUDIO COMPLETED")
+    print(border)
+    print(f"  * Curated Compounds:         {summary.curated_count}")
+    print(f"  * Docking Consensus Leads:   {summary.shortlisted_count}")
+    print(f"  * Confirmed In Vitro Hits:   {summary.qualified_hits_count}")
+    print(f"  * Preclinical Candidates:    {summary.preclinical_candidates_count}")
+    print(f"  * Bemis-Murcko Scaffolds:    {summary.scaffolds_count}")
+    print(f"  * Execution Time:            {summary.elapsed_seconds:.2f} seconds")
+    print(f"  * Output Directory:          {summary.output_dir}")
+    print(f"  * Interactive Dashboard:     {summary.studio_html_path.resolve()}")
+    print(border)
+    print("  Open 'studio.html' in your browser to view the interactive dashboard.")
+    print(border)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="python -m pnn.run",
+        description="One-click execution of the entire PNN perineuronal net drug discovery pipeline.",
+    )
+    parser.add_argument("--vendor", default="data/compounds/vendor_library.csv", help="vendor screening library CSV")
+    parser.add_argument("--repurposing", default="data/compounds/repurposing_library.csv", help="repurposing library CSV")
+    parser.add_argument("--docking", default="data/docking/multi_target_scores.csv", help="multi-target docking CSV")
+    parser.add_argument("--degradation", default="data/assays/degradation_template.csv", help="DQ-CS degradation assay CSV")
+    parser.add_argument("--permeability", default="data/assays/permeability_template.csv", help="PAMPA/MDCK permeability CSV")
+    parser.add_argument("--cytotoxicity", default="data/assays/cytotoxicity_template.csv", help="CellTiter-Glo cytotoxicity CSV")
+    parser.add_argument("--pk", default="data/preclinical/pk_timecourse_template.csv", help="in vivo PK time series CSV")
+    parser.add_argument("--pd", default="data/preclinical/pd_metabolic_template.csv", help="in vivo PD outcomes CSV")
+    parser.add_argument("--out-dir", default="output", help="destination directory for all generated artifacts")
+    parser.add_argument("--open", dest="open_browser", action="store_true", help="open studio.html in web browser on finish")
+    parser.add_argument("--no-browser", dest="no_browser", action="store_true", help="suppress opening browser")
+    return parser
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        summary = execute_turnkey_pipeline(
+            vendor_csv=Path(args.vendor),
+            repurposing_csv=Path(args.repurposing) if args.repurposing else None,
+            docking_csv=Path(args.docking),
+            degradation_csv=Path(args.degradation) if args.degradation else None,
+            permeability_csv=Path(args.permeability) if args.permeability else None,
+            cytotoxicity_csv=Path(args.cytotoxicity) if args.cytotoxicity else None,
+            pk_csv=Path(args.pk) if args.pk else None,
+            pd_csv=Path(args.pd) if args.pd else None,
+            out_dir=Path(args.out_dir),
+        )
+        print_run_banner(summary)
+
+        if args.open_browser and not args.no_browser:
+            try:
+                webbrowser.open_new_tab(summary.studio_html_path.resolve().as_uri())
+            except Exception as exc:  # hygiene: allow non-critical desktop browser launch
+                print(f"[Notice] Could not launch browser: {exc}", file=sys.stderr)
+
+    except RunnerError as exc:
+        print(f"What: {exc}", file=sys.stderr)
+        print("Why: turnkey runner requires valid input datasets in data/ subdirectories.", file=sys.stderr)
+        print("Fix: verify that benchmark datasets exist in data/compounds/, data/docking/, data/assays/, and data/preclinical/.", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"What: {exc}", file=sys.stderr)
+        print("Why: output directory or artifacts could not be written to disk.", file=sys.stderr)
+        print("Fix: specify a writable destination for --out-dir.", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

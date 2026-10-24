@@ -6,20 +6,20 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `35`
-- **Total Classes**: `57`
-- **Total Top-Level Functions**: `135`
-- **Total Class Methods**: `145`
-- **Total Source Lines**: `7008`
+- **Total Python Modules**: `40`
+- **Total Classes**: `64`
+- **Total Top-Level Functions**: `147`
+- **Total Class Methods**: `157`
+- **Total Source Lines**: `7977`
 
 ---
 
 ## 📦 Modules & Exported Symbols
 
 ### [`pnn/__init__.py`](pnn/__init__.py)
-> *Phase 2, Phase 3, and Phase 4 discovery and preclinical candidate pipeline for PNN.*
+> *Phase 2, Phase 3, Phase 4, and Phase 5 discovery and preclinical pipeline for PNN.*
 
-**Size**: `113` lines (`2508` bytes)
+**Size**: `135` lines (`2938` bytes)
 
 ---
 
@@ -149,6 +149,28 @@
 
 ---
 
+### [`pnn/mpo.py`](pnn/mpo.py)
+> *Phase 5 Multiparametric Optimization (MPO) and candidate profiling engine for PNN.*
+
+**Size**: `458` lines (`18984` bytes)
+
+**Classes:**
+- `class MpoError` - *Raised when MPO input data is invalid or missing required metrics.*
+- `class MpoProfile`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _ramp_desirability(val, low, high, increasing)` - *Calculate linear ramp desirability between low and high bounds.*
+- `def calculate_cns_mpo(mw, logp, tpsa, hbd, pka, logd)` - *Calculate Pfizer CNS MPO score (0.0 to 6.0) from physicochemical properties.*
+- `def profile_candidate(compound_id, name, mw, logp, tpsa, hbd, pka, ec50_nm, brain_kp, oral_f_pct, selectivity_index)` - *Calculate CNS MPO, multi-domain desirability functions, and identify optimization liabilities.*
+- `def render_mpo_report(profiles)` - *Render comprehensive Phase 5 Lead Optimization & MPO Profiling markdown report.*
+- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
+- `def run_mpo_analysis(compounds_path, candidates_path, assays_path)` - *Ingest datasets, compute MPO and composite desirability, and generate profiles.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
 ### [`pnn/pipeline.py`](pnn/pipeline.py)
 > *Command-line end-to-end Phase 2 lead selection for the PNN project.*
 
@@ -243,6 +265,23 @@
 - `def _pnn_ec50(compound)`
 - `def evaluate(compound)` - *Return every rule verdict for `compound` in a stable order.*
 - `def weight(criterion_name)` - *Core design properties outweigh optional measured/ADMET properties.*
+
+---
+
+### [`pnn/runner.py`](pnn/runner.py)
+> *One-click turnkey discovery pipeline runner for PNN.*
+
+**Size**: `276` lines (`11085` bytes)
+
+**Classes:**
+- `class RunnerError` - *Raised when one-click pipeline runner cannot execute or find input data.*
+- `class RunSummary`
+
+**Functions:**
+- `def execute_turnkey_pipeline(vendor_csv, repurposing_csv, docking_csv, degradation_csv, permeability_csv, cytotoxicity_csv, pk_csv, pd_csv, out_dir, min_tier, emit_root)` - *Execute complete end-to-end PNN discovery workflow from libraries to interactive studio.*
+- `def print_run_banner(summary)` - *Print terminal summary banner for turnkey runner.*
+- `def build_parser()`
+- `def main(argv)`
 
 ---
 
@@ -368,6 +407,13 @@
 
 ---
 
+### [`run.py`](run.py)
+> *Turnkey one-click entrypoint for the PNN perineuronal net drug discovery project.*
+
+**Size**: `17` lines (`440` bytes)
+
+---
+
 ### [`tests/__init__.py`](tests/__init__.py)
 **Size**: `0` lines (`0` bytes)
 
@@ -488,6 +534,23 @@
 
 ---
 
+### [`tests/test_mpo.py`](tests/test_mpo.py)
+**Size**: `120` lines (`4281` bytes)
+
+**Classes:**
+- `class TestMpoCalculations`
+  - Method `.test_cns_mpo_optimal_properties()`
+  - Method `.test_cns_mpo_penalized_properties()`
+  - Method `.test_profile_development_candidate()`
+  - Method `.test_profile_deprioritized_liability_detection()`
+- `class TestMpoAnalysisAndCLI`
+  - Method `.test_missing_compounds_raises()`
+  - Method `.test_run_mpo_analysis_valid()`
+  - Method `.test_render_mpo_report()`
+  - Method `.test_cli_execution_success()`
+
+---
+
 ### [`tests/test_pipeline.py`](tests/test_pipeline.py)
 > *Unit and CLI integration tests for the end-to-end Phase 2 lead selection pipeline.*
 
@@ -580,6 +643,17 @@
 **Functions:**
 - `def ideal(**overrides)`
 - `def by_name(compound)`
+
+---
+
+### [`tests/test_run.py`](tests/test_run.py)
+**Size**: `76` lines (`3069` bytes)
+
+**Classes:**
+- `class TestTurnkeyRunner`
+  - Method `.test_missing_vendor_library_raises()`
+  - Method `.test_execute_turnkey_pipeline_success()`
+  - Method `.test_runner_cli_execution()`
 
 ---
 

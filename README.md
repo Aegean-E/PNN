@@ -5,6 +5,10 @@ Oral, blood-brain barrier-penetrant agents that soften hypothalamic perineuronal
 ## ⚡ 30-Second Cold-Start Quick Reference
 
 - **Runtime Prerequisites**: Python 3.10+ (standard library only, for the screening pipeline and AIKit verification) and git 2.30+ (for version control).
+- **One-Click Turnkey Start**:
+  - Windows: Double-click start.bat or run python run.py
+  - Linux/macOS: Run ./start.sh or python run.py
+  - Executes end-to-end curation, screening, docking consensus, assay qualification, preclinical PK/PD, SAR scaffold analysis, and generates studio.html in <0.2s.
 - **Canonical Regression Shield Gate**:
   ```bash
   python -m unittest discover -s tests -t .
@@ -30,6 +34,9 @@ PNN/
 ├── .gitignore                     <- AIKit transient-state baseline
 ├── literature_review.md           <- Comprehensive literature findings
 ├── research_framework.md          <- Methodology & experimental design
+├── run.py                         <- One-click turnkey pipeline entrypoint
+├── start.bat                      <- One-click Windows launcher script
+├── start.sh                       <- One-click POSIX/macOS launcher script
 ├── .aikit/                        <- AIKit memory: guidelines, decisions, ledger, project record
 ├── agent_design/                  <- Agent design specifications
 │   ├── target_profiles.md         <- Target protein profiles
@@ -40,6 +47,7 @@ PNN/
 │   ├── docking_ranking.md         <- Docking consensus contract and normalization
 │   ├── lead_selection.md          <- End-to-end lead selection workflow and manifest
 │   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
+│   ├── mpo_optimization.md        <- Phase 5 MPO and composite desirability
 │   ├── sar_analysis.md            <- Bemis-Murcko framework extraction and SAR clustering
 │   ├── screening_pipeline.md      <- Phase 2 property screening contract and rules
 │   └── target_profiles.md         <- Receptor binding-pocket invariants and Vina grids
@@ -75,11 +83,13 @@ PNN/
 │   ├── curate.py                  <- `python -m pnn.curate` library command
 │   ├── curation.py                <- Merge, dedupe and property-space caps
 │   ├── docking.py                 <- Docking ingestion and consensus normalization
+│   ├── mpo.py                     <- Phase 5 CNS MPO and candidate profiling
 │   ├── pipeline.py                <- `python -m pnn.pipeline` lead selection CLI
 │   ├── preclinical.py             <- Phase 4 in vivo PK/PD NCA analysis and candidate selection
 │   ├── rank.py                    <- `python -m pnn.rank` shortlist command
 │   ├── reports.py                 <- Atomic CSV/JSON writers
 │   ├── rules.py                   <- CNS/BBB property rules
+│   ├── runner.py                  <- One-click discovery pipeline runner
 │   ├── sar.py                     <- Bemis-Murcko scaffold extraction and SAR activity clustering
 │   ├── screen.py                  <- Tiering, scoring and ranking
 │   ├── selection.py               <- End-to-end pipeline execution and lead report
@@ -96,10 +106,12 @@ PNN/
     ├── test_docking.py            <- Docking ingestion and normalization
     ├── test_docs.py               <- Required docs and README tree paths
     ├── test_golden.py             <- Golden reference pipeline verification
+    ├── test_mpo.py                <- Phase 5 MPO profiling tests
     ├── test_pipeline.py           <- End-to-end pipeline and manifest tests
     ├── test_preclinical.py        <- In vivo PK/PD NCA analysis and candidate selection tests
     ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
+    ├── test_run.py                <- Turnkey runner and launcher tests
     ├── test_sar.py                <- Bemis-Murcko scaffold extraction and SAR tests
     ├── test_screen.py             <- Tiering, ranking and CSV ingestion
     ├── test_studio.py             <- Interactive HTML/SVG studio tests

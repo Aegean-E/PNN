@@ -1,4 +1,4 @@
-"""Phase 2, Phase 3, and Phase 4 discovery and preclinical candidate pipeline for PNN."""
+"""Phase 2, Phase 3, Phase 4, and Phase 5 discovery and preclinical pipeline for PNN."""
 
 from .assay import (
     AssayError,
@@ -15,6 +15,14 @@ from .assay import (
 from .compounds import Compound, CompoundError, load_compounds, parse_compounds
 from .curation import Candidate, CurationError, curate, deduplicate
 from .docking import DockingError, DockingScore, load_docking_scores
+from .mpo import (
+    MpoError,
+    MpoProfile,
+    calculate_cns_mpo,
+    profile_candidate,
+    render_mpo_report,
+    run_mpo_analysis,
+)
 from .preclinical import (
     PdOutcome,
     PkProfile,
@@ -25,6 +33,11 @@ from .preclinical import (
     load_pd_data,
     load_pk_data,
     render_preclinical_report,
+)
+from .runner import (
+    RunSummary,
+    RunnerError,
+    execute_turnkey_pipeline,
 )
 from .sar import (
     CompoundSar,
@@ -69,6 +82,8 @@ __all__ = [
     "DockingScore",
     "LeadRun",
     "LeadSelection",
+    "MpoError",
+    "MpoProfile",
     "PdOutcome",
     "PermeabilityResult",
     "PipelineError",
@@ -76,6 +91,8 @@ __all__ = [
     "PreclinicalCandidate",
     "PreclinicalError",
     "QualifiedHit",
+    "RunSummary",
+    "RunnerError",
     "SarError",
     "ScaffoldCluster",
     "ScreenResult",
@@ -83,10 +100,12 @@ __all__ = [
     "StudioError",
     "TargetProfile",
     "analyze_sar",
+    "calculate_cns_mpo",
     "calculate_nca",
     "curate",
     "deduplicate",
     "evaluate_candidates",
+    "execute_turnkey_pipeline",
     "extract_scaffold",
     "generate_vina_config",
     "get_target",
@@ -100,12 +119,15 @@ __all__ = [
     "load_pk_data",
     "load_studio_data",
     "parse_compounds",
+    "profile_candidate",
     "qualify_leads",
     "render_assay_report",
     "render_lead_report",
+    "render_mpo_report",
     "render_preclinical_report",
     "render_sar_report",
     "render_studio_html",
+    "run_mpo_analysis",
     "run_pipeline",
     "screen_compounds",
     "select_leads",
