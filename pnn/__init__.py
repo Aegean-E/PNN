@@ -1,4 +1,4 @@
-"""Phase 2 and Phase 3 computational and in vitro validation pipeline for PNN."""
+"""Phase 2, Phase 3, and Phase 4 discovery and preclinical candidate pipeline for PNN."""
 
 from .assay import (
     AssayError,
@@ -15,6 +15,25 @@ from .assay import (
 from .compounds import Compound, CompoundError, load_compounds, parse_compounds
 from .curation import Candidate, CurationError, curate, deduplicate
 from .docking import DockingError, DockingScore, load_docking_scores
+from .preclinical import (
+    PdOutcome,
+    PkProfile,
+    PreclinicalCandidate,
+    PreclinicalError,
+    calculate_nca,
+    evaluate_candidates,
+    load_pd_data,
+    load_pk_data,
+    render_preclinical_report,
+)
+from .sar import (
+    CompoundSar,
+    SarError,
+    ScaffoldCluster,
+    analyze_sar,
+    extract_scaffold,
+    render_sar_report,
+)
 from .screen import ScreenResult, screen_compounds, summarize
 from .selection import (
     LeadRun,
@@ -23,6 +42,12 @@ from .selection import (
     render_lead_report,
     run_pipeline,
     select_leads,
+)
+from .studio import (
+    StudioCompound,
+    StudioError,
+    load_studio_data,
+    render_studio_html,
 )
 from .target import (
     TargetProfile,
@@ -36,6 +61,7 @@ __all__ = [
     "Candidate",
     "Compound",
     "CompoundError",
+    "CompoundSar",
     "CurationError",
     "CytotoxicityResult",
     "DegradationResult",
@@ -43,13 +69,25 @@ __all__ = [
     "DockingScore",
     "LeadRun",
     "LeadSelection",
+    "PdOutcome",
     "PermeabilityResult",
     "PipelineError",
+    "PkProfile",
+    "PreclinicalCandidate",
+    "PreclinicalError",
     "QualifiedHit",
+    "SarError",
+    "ScaffoldCluster",
     "ScreenResult",
+    "StudioCompound",
+    "StudioError",
     "TargetProfile",
+    "analyze_sar",
+    "calculate_nca",
     "curate",
     "deduplicate",
+    "evaluate_candidates",
+    "extract_scaffold",
     "generate_vina_config",
     "get_target",
     "list_targets",
@@ -57,11 +95,17 @@ __all__ = [
     "load_cytotoxicity_data",
     "load_degradation_data",
     "load_docking_scores",
+    "load_pd_data",
     "load_permeability_data",
+    "load_pk_data",
+    "load_studio_data",
     "parse_compounds",
     "qualify_leads",
     "render_assay_report",
     "render_lead_report",
+    "render_preclinical_report",
+    "render_sar_report",
+    "render_studio_html",
     "run_pipeline",
     "screen_compounds",
     "select_leads",

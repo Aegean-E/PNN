@@ -40,11 +40,13 @@ PNN/
 │   ├── docking_ranking.md         <- Docking consensus contract and normalization
 │   ├── lead_selection.md          <- End-to-end lead selection workflow and manifest
 │   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
+│   ├── sar_analysis.md            <- Bemis-Murcko framework extraction and SAR clustering
 │   ├── screening_pipeline.md      <- Phase 2 property screening contract and rules
 │   └── target_profiles.md         <- Receptor binding-pocket invariants and Vina grids
 ├── experimental/                  <- Experimental validation
 │   ├── assay_pipeline.md          <- Phase 3 in vitro assay qualification and hit criteria
-│   └── experimental_protocols.md  <- In vitro/in vivo assay protocols
+│   ├── experimental_protocols.md  <- In vitro/in vivo assay protocols
+│   └── preclinical_pipeline.md    <- Phase 4 in vivo PK/PD and candidate qualification
 ├── data/                          <- Data storage
 │   ├── compounds/                 <- Compound libraries
 │   │   ├── repurposing_library.csv  <- Annotated CNS repurposing library
@@ -57,6 +59,9 @@ PNN/
 │   │   ├── cytotoxicity_template.csv  <- CellTiter-Glo counter-screen template
 │   │   ├── degradation_template.csv  <- Fluorogenic DQ-CS cleavage template
 │   │   └── permeability_template.csv  <- PAMPA / MDCK-MDR1 transport template
+│   ├── preclinical/               <- In vivo PK/PD templates and datasets
+│   │   ├── pd_metabolic_template.csv  <- In vivo PD WFA/ITT metabolic outcome template
+│   │   └── pk_timecourse_template.csv  <- In vivo PK concentration-time series template
 │   └── literature/                <- Extracted literature data (empty until populated)
 ├── docs/                          <- Documentation
 │   ├── cold_start_guide.md        <- AI cold-start instructions
@@ -71,11 +76,14 @@ PNN/
 │   ├── curation.py                <- Merge, dedupe and property-space caps
 │   ├── docking.py                 <- Docking ingestion and consensus normalization
 │   ├── pipeline.py                <- `python -m pnn.pipeline` lead selection CLI
+│   ├── preclinical.py             <- Phase 4 in vivo PK/PD NCA analysis and candidate selection
 │   ├── rank.py                    <- `python -m pnn.rank` shortlist command
 │   ├── reports.py                 <- Atomic CSV/JSON writers
 │   ├── rules.py                   <- CNS/BBB property rules
+│   ├── sar.py                     <- Bemis-Murcko scaffold extraction and SAR activity clustering
 │   ├── screen.py                  <- Tiering, scoring and ranking
 │   ├── selection.py               <- End-to-end pipeline execution and lead report
+│   ├── studio.py                  <- Standalone HTML/SVG interactive visualization studio
 │   ├── tables.py                  <- Shared tabular CSV row contracts
 │   └── target.py                  <- Receptor profiles and AutoDock Vina grid generation
 ├── tools/                         <- Golden runs and automation tools
@@ -89,9 +97,12 @@ PNN/
     ├── test_docs.py               <- Required docs and README tree paths
     ├── test_golden.py             <- Golden reference pipeline verification
     ├── test_pipeline.py           <- End-to-end pipeline and manifest tests
+    ├── test_preclinical.py        <- In vivo PK/PD NCA analysis and candidate selection tests
     ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
+    ├── test_sar.py                <- Bemis-Murcko scaffold extraction and SAR tests
     ├── test_screen.py             <- Tiering, ranking and CSV ingestion
+    ├── test_studio.py             <- Interactive HTML/SVG studio tests
     └── test_target.py             <- Receptor profiles and Vina config generation
 ```
 

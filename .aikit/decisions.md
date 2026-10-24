@@ -48,3 +48,10 @@ contract, a dependency, a data format or the architecture; IDs are consecutive a
 - **Consequences**: Structural invariants ensure reproducible receptor grid definitions, and in vitro assay datasets can be qualified objectively against standardized progression thresholds without third-party dependencies.
 
 
+
+### ADR-006: In vivo PK/PD candidate qualification, Bemis-Murcko SAR decomposition, and standalone HTML studio
+- **Date**: 2026-10-24
+- **Status**: Accepted
+- **Context**: Advancing PNN-softening candidates towards preclinical nomination required: (1) executable non-compartmental pharmacokinetic and in vivo pharmacodynamic (PK/PD) analysis; (2) Bemis-Murcko core scaffold and SAR decomposition to guide analog optimization without external cheminformatics libraries; and (3) an interactive visualization dashboard presenting multi-target affinity, physicochemical radar, and PK concentration-time profiles in a self-contained format.
+- **Decision**: Implement `pnn.preclinical` for linear trapezoidal NCA (Cmax, AUC_0_t, AUC_0_inf, lambda_z, t1/2, F, Kp,brain) and candidate qualification; implement `pnn.sar` with standard-library biconnected component Bemis-Murcko scaffold extraction and SAR activity-property clustering; implement `pnn.studio` for generating a standalone, offline-ready HTML5/SVG dashboard (`studio.html`); export all public symbols in `pnn/__init__.py`; provide template datasets in `data/preclinical/`.
+- **Consequences**: Enables end-to-end preclinical decision making strictly within Python's standard library, adhering to principles G-001 (in vivo translation limits), G-002 (docking consensus relative to docked set), and G-003 (exact SMILES non-canonicalization).

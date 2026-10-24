@@ -6,20 +6,20 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `29`
-- **Total Classes**: `37`
-- **Total Top-Level Functions**: `104`
-- **Total Class Methods**: `113`
-- **Total Source Lines**: `4448`
+- **Total Python Modules**: `35`
+- **Total Classes**: `57`
+- **Total Top-Level Functions**: `135`
+- **Total Class Methods**: `145`
+- **Total Source Lines**: `7008`
 
 ---
 
 ## 📦 Modules & Exported Symbols
 
 ### [`pnn/__init__.py`](pnn/__init__.py)
-> *Phase 2 and Phase 3 computational and in vitro validation pipeline for PNN.*
+> *Phase 2, Phase 3, and Phase 4 discovery and preclinical candidate pipeline for PNN.*
 
-**Size**: `69` lines (`1616` bytes)
+**Size**: `113` lines (`2508` bytes)
 
 ---
 
@@ -163,6 +163,31 @@
 
 ---
 
+### [`pnn/preclinical.py`](pnn/preclinical.py)
+> *Phase 4 in vivo pharmacokinetics (PK), pharmacodynamics (PD), and preclinical candidate selection for PNN.*
+
+**Size**: `558` lines (`24172` bytes)
+
+**Classes:**
+- `class PreclinicalError` - *Raised when in vivo preclinical data is malformed or violates contract.*
+- `class ConcentrationPoint`
+- `class PkProfile`
+- `class PdOutcome`
+- `class PreclinicalCandidate`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _parse_num(val, field_name, row_id)`
+- `def calculate_nca(points, dose_mg_kg, compound_id, route, tissue)` - *Perform non-compartmental pharmacokinetic analysis (NCA) on concentration-time points.*
+- `def load_pk_data(path)` - *Ingest concentration-time series CSV and calculate NCA PK profiles.*
+- `def load_pd_data(path)` - *Ingest in vivo pharmacodynamic (PD) and metabolic outcomes CSV.*
+- `def evaluate_candidates(pk_profiles, pd_outcomes, min_kp_brain, min_oral_f_pct, min_wfa_reduction_pct, min_itt_improvement_pct)` - *Triage compounds against preclinical PK exposure and PD metabolic criteria.*
+- `def render_preclinical_report(candidates, criteria)` - *Render a comprehensive Phase 4 in vivo preclinical qualification report.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
 ### [`pnn/rank.py`](pnn/rank.py)
 > *Command-line consensus ranking of docking results for PNN Phase 2.*
 
@@ -221,6 +246,36 @@
 
 ---
 
+### [`pnn/sar.py`](pnn/sar.py)
+> *Structure-Activity Relationship (SAR) and Bemis-Murcko scaffold decomposition for PNN.*
+
+**Size**: `772` lines (`29999` bytes)
+
+**Classes:**
+- `class SarError` - *Raised when SAR data is malformed or violates scientific contract.*
+- `class CompoundSar`
+  - Method `.as_row()`
+- `class ScaffoldCluster`
+  - Method `.as_row()`
+
+**Functions:**
+- `def parse_smiles_graph(smiles)` - *Parse SMILES into an atom list and adjacency graph.*
+- `def find_biconnected_blocks(n, adj)` - *Hopcroft-Tarjan algorithm to find all biconnected components (cycle systems).*
+- `def serialize_subgraph_smiles(atoms, adj, nodes)` - *Serialize an induced subgraph of atoms into a SMILES string.*
+- `def _identify_scaffold_name(atoms, cycle_blocks, linkers)` - *Identify recognizable chemotype descriptor for Bemis-Murcko framework.*
+- `def extract_scaffold(smiles)` - *Decompose a SMILES into Bemis-Murcko framework SMILES, chemotype name, and R-group substituents.*
+- `def load_compounds(path)` - *Load compound property records from CSV.*
+- `def load_docking_scores(path)` - *Load multi-target or single-target docking scores (consensus or best affinity).*
+- `def load_assay_potencies(path)` - *Load in vitro assay EC50 potencies.*
+- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
+- `def load_preclinical_exposures(path)` - *Load in vivo preclinical exposures (brain_plasma_ratio, oral_bioavailability_pct).*
+- `def analyze_sar(compound_records, docking_scores, assay_potencies, preclinical_exposures)` - *Decompose compounds into Bemis-Murcko scaffolds and perform SAR activity clustering.*
+- `def render_sar_report(compounds, clusters)` - *Render a comprehensive Structure-Activity Relationship (SAR) markdown report.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
 ### [`pnn/screen.py`](pnn/screen.py)
 > *Tiering and ranking for the PNN Phase 2 property screen.*
 
@@ -259,6 +314,28 @@
 - `def _manifest(selection, outputs, options)`
 - `def render_lead_report(selection, options, top_n)` - *Render a comprehensive Markdown lead report honoring G-001, G-002, and G-003.*
 - `def run_pipeline(inputs, docking, out_dir, min_tier, per_bin, bin_width, max_compounds, max_rmsd, min_vina, top_n_report)` - *Run the three Phase 2 stages and write their artifacts, report and manifest.*
+
+---
+
+### [`pnn/studio.py`](pnn/studio.py)
+> *Interactive Lead & Assay Visualization Studio and Standalone HTML Dashboard for PNN.*
+
+**Size**: `716` lines (`28104` bytes)
+
+**Classes:**
+- `class StudioError` - *Raised when studio inputs are malformed or missing required data.*
+- `class StudioCompound`
+
+**Functions:**
+- `def _normalize_cns_axis(val, optimal_center, half_width)`
+- `def generate_radar_svg(compounds, width, height)` - *Generate SVG radar chart for CNS drug-likeness physicochemical properties.*
+- `def generate_docking_heatmap_svg(compounds, targets, cell_w, cell_h)` - *Generate multi-target docking affinity heatmap in SVG.*
+- `def generate_pk_curve_svg(compounds, width, height)` - *Generate in vivo pharmacokinetic concentration-time profiles SVG.*
+- `def render_studio_html(compounds, radar_svg, heatmap_svg, pk_svg)` - *Render full standalone HTML5 studio dashboard.*
+- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
+- `def load_studio_data(compounds_path, docking_path, assays_path, pk_path, preclinical_candidates_path)` - *Assemble all project datasets into StudioCompound instances.*
+- `def build_parser()`
+- `def main(argv)`
 
 ---
 
@@ -433,6 +510,29 @@
 
 ---
 
+### [`tests/test_preclinical.py`](tests/test_preclinical.py)
+**Size**: `224` lines (`8589` bytes)
+
+**Classes:**
+- `class TestPreclinicalNCA`
+  - Method `.test_nca_empty_points_raises()`
+  - Method `.test_nca_trapezoidal_auc_exact()`
+  - Method `.test_nca_terminal_elimination_and_clearance()`
+- `class TestPreclinicalDataIngestion`
+  - Method `.test_load_pk_data_missing_file_raises()`
+  - Method `.test_load_pk_data_missing_columns_raises()`
+  - Method `.test_load_pk_data_invalid_numeric_raises()`
+  - Method `.test_load_pd_data_valid()`
+- `class TestPreclinicalCandidateEvaluation`
+  - Method `.setUp()`
+  - Method `.test_evaluate_clinical_candidate()`
+  - Method `.test_evaluate_insufficient_brain_penetration()`
+  - Method `.test_render_preclinical_report()`
+- `class TestPreclinicalCLI`
+  - Method `.test_cli_execution_success()`
+
+---
+
 ### [`tests/test_rank.py`](tests/test_rank.py)
 > *Unit and CLI tests for the docking consensus shortlist.*
 
@@ -483,6 +583,25 @@
 
 ---
 
+### [`tests/test_sar.py`](tests/test_sar.py)
+**Size**: `138` lines (`5460` bytes)
+
+**Classes:**
+- `class TestSarSmilesScaffolding`
+  - Method `.test_parse_empty_smiles_raises()`
+  - Method `.test_parse_unmatched_parens_raises()`
+  - Method `.test_acyclic_molecule_scaffold()`
+  - Method `.test_monocyclic_benzene_scaffold()`
+  - Method `.test_bemis_murcko_extraction_multiring()`
+- `class TestSarAnalysisAndClustering`
+  - Method `.test_load_compounds_missing_file_raises()`
+  - Method `.test_analyze_sar_scaffold_clustering()`
+  - Method `.test_render_sar_report()`
+- `class TestSarCLI`
+  - Method `.test_cli_execution_success()`
+
+---
+
 ### [`tests/test_screen.py`](tests/test_screen.py)
 > *Unit tests for tiering, ranking and CSV ingestion.*
 
@@ -515,6 +634,24 @@
 **Functions:**
 - `def ideal(compound_id, **overrides)`
 - `def acceptable(compound_id, **overrides)`
+
+---
+
+### [`tests/test_studio.py`](tests/test_studio.py)
+**Size**: `108` lines (`3819` bytes)
+
+**Classes:**
+- `class TestStudioRendering`
+  - Method `.setUp()`
+  - Method `.test_generate_radar_svg()`
+  - Method `.test_generate_docking_heatmap_svg()`
+  - Method `.test_generate_pk_curve_svg()`
+  - Method `.test_render_studio_html()`
+- `class TestStudioDataLoader`
+  - Method `.test_missing_compounds_file_raises()`
+  - Method `.test_load_studio_data_valid()`
+- `class TestStudioCLI`
+  - Method `.test_cli_execution_success()`
 
 ---
 
