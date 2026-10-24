@@ -2,50 +2,89 @@
 
 ## Overview
 
-The `pnn.ind` module implements standard FDA (CDER) and ICH guidance for translating preclinical pharmacokinetic (PK) and pharmacodynamic (PD) parameters into first-in-human starting doses and compiling an Investigational New Drug (IND) regulatory candidate dossier.
+`pnn.ind` translates measured preclinical dose, clearance, volume and NOAEL data into a human
+equivalent dose (HED), a Phase 1 Maximum Recommended Starting Dose (MRSD), projected human PK and
+an IND nomination dossier.
 
-## Allometric Dose Scaling Equations
+Every value is sourced from an input column. A missing measurement is reported as `UNMEASURED` and
+the compound's `evidence_status` drops to `PARTIAL` or `INSUFFICIENT_EVIDENCE`. The module never
+substitutes a default Kp, F, dose, clearance or NOAEL.
+
+## Inputs
+
+`--compounds` (required, one or more CSVs) supplies `compound_id` and `name`.
+
+`--candidates` (optional) supplies measured preclinical values. Recognised columns:
+
+| Column | Used as |
+|---|---|
+| `dose_mg_kg` | Efficacious animal dose |
+| `cl_l_h_kg` | Mouse clearance for allometric scaling |
+| `vd_l_kg` | Mouse volume of distribution |
+| `brain_plasma_ratio` | Brain partition `Kp` |
+| `oral_bioavailability_pct` | Oral bioavailability `F` |
+| `noael_mg_kg` | NOAEL (when no `--tox` is supplied) |
+
+`--tox` (optional) supplies repeat-dose toxicology via `pnn.safety`; the lowest NOAEL per compound
+is selected and its species `K_m` is used for the NOAEL HED.
+
+`--lead` nominates a compound by ID; otherwise the first compound with measured data is used. The
+nominated lead is listed first and drives the dossier summary.
+
+## Equations
 
 1. **Human Equivalent Dose (HED)**:
-   Per FDA Guidance for Industry (Estimating the Maximum Safe Starting Dose in Initial Clinical Trials):
-   $$\text{HED}\ (\text{mg/kg}) = \text{Animal Dose}\ (\text{mg/kg}) \times \left( \frac{\text{Animal } K_m}{\text{Human } K_m} \right)$$
-   For mouse to human conversion:
-   $$\frac{K_{m,\text{mouse}}}{K_{m,\text{human}}} = \frac{3}{37} \approx 0.08108$$
-
+   $$\text{HED}\ (\text{mg/kg}) = \text{Animal Dose}\ (\text{mg/kg}) \times \left( \frac{3}{37} \right)$$
 2. **Total Human Daily Dose**:
-   $$\text{Total Daily Dose}\ (\text{mg}) = \text{HED}\ (\text{mg/kg}) \times 60.0\text{ kg}$$
-
-3. **Interspecies Clearance ($CL$) and Volume ($V_d$) Scaling**:
-   Based on empirical allometric body weight exponents:
+   $$\text{Daily Dose}\ (\text{mg}) = \text{HED}\ (\text{mg/kg}) \times 60.0\text{ kg}$$
+3. **Interspecies Scaling**:
    $$CL_{\text{human}} = CL_{\text{mouse}} \times W_{\text{mouse}} \times \left( \frac{60.0}{0.02} \right)^{0.75}$$
    $$V_{d,\text{human}} = V_{d,\text{mouse}} \times W_{\text{mouse}} \times \left( \frac{60.0}{0.02} \right)^{1.0}$$
-
-4. **Projected Human Elimination Half-Life ($t_{1/2}$)**:
+4. **Projected Half-Life**:
    $$t_{1/2,\text{human}} = \frac{\ln(2) \times V_{d,\text{human}}}{CL_{\text{human}}}$$
+5. **NOAEL HED and MRSD**:
+   $$\text{NOAEL}_{\text{HED}} = \text{NOAEL} \times \frac{K_{m,\text{species}}}{37}$$
+   $$\text{MRSD}\ (\text{mg}) = \frac{\text{NOAEL}_{\text{HED}}}{10} \times 60.0\text{ kg}$$
 
-5. **Maximum Recommended Starting Dose (MRSD)**:
-   Starting from the animal No Observed Adverse Effect Level (NOAEL, typically set at $5 \times$ efficacious dose):
-   $$\text{NOAEL}_{\text{HED}} = \text{NOAEL}_{\text{mouse}} \times 0.08108$$
-   Applying standard ICH M3(R2) 10-fold safety factor:
-   $$\text{MRSD}\ (\text{mg}) = \frac{\text{NOAEL}_{\text{HED}}}{10.0} \times 60.0\text{ kg}$$
+The 10-fold factor is the default ICH M3(R2) safety divisor and is recorded in the dossier limits.
 
-## Safety Pharmacology & Protocol Checklist
+## Evidence Status
 
-- **ICH S7A/S7B Core Safety Battery**:
-  - Central Nervous System: Modified Irwin screen / Functional Observational Battery (FOB).
-  - Cardiovascular System: In vitro hERG automated patch clamp and telemetry ECG (QTc interval).
-  - Respiratory System: Whole-body plethysmography (tidal volume and respiratory rate).
-- **Phase 1 Trial Architecture**:
-  - Single Ascending Dose (SAD) with modified Fibonacci dose escalation cohorts in healthy adult volunteers.
-  - Multiple Ascending Dose (MAD) 14-day intermittent pulsatile dosing evaluating CSF-to-plasma drug partition ($K_{p,\text{CSF}}$) and insulin sensitivity biomarkers.
+- `COMPLETE`: dose, mouse CL/Vd, NOAEL, brain Kp and oral F were all supplied.
+- `PARTIAL`: at least one measurement is present; missing values remain blank.
+- `INSUFFICIENT_EVIDENCE`: nothing measurable was supplied.
+
+The dossier lists every gap and its owning module (`pnn.preclinical` for dose/CL/Vd/Kp/F,
+`pnn.safety` for the most sensitive NOAEL).
 
 ## Command-Line Usage
 
 ```bash
 python -m pnn.ind \
-  --compounds data/compounds/vendor_library.csv \
-  --candidates data/preclinical/pk_timecourse_template.csv \
+  --compounds data/compounds/vendor_library.csv data/compounds/repurposing_library.csv \
+  --candidates output/preclinical_candidates.csv \
+  --tox data/toxicology/repeat_dose_tox_template.csv \
+  --lead PNN-REP-01 \
   --out output/human_dose_projections.csv \
   --dossier output/ind_dossier.md \
   --json output/ind_summary.json
 ```
+
+Outputs:
+
+- `human_dose_projections.csv`: one row per compound, including `evidence_status`.
+- `ind_dossier.md`: nomination summary, scaling matrix, evidence gaps, unchecked ICH S7A/S7B
+  checklist and Phase 1 protocol skeleton.
+- `ind_summary.json` (optional): counts by evidence status and the nominated lead row.
+
+## Reconciliation with `pnn.safety`
+
+`pnn.safety` selects the most sensitive species NOAEL and computes its own NOAEL-based MRSD. When
+`--tox` is supplied, `pnn.ind` uses the same lowest NOAEL and species factor, so the two MRSD values
+should match. Any difference means the two commands were given different toxicology inputs.
+
+## Limits
+
+- Allometric scaling is a projection from animal data and does not establish human safety or efficacy.
+- Study quality, GLP compliance, exposure margins and pathology review belong to a qualified
+  toxicologist; the dossier's safety checklist items remain unchecked until that evidence exists.

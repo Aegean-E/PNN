@@ -1,136 +1,23 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-advanced-translational-platform-v1",
+    "task_id": "pnn-hed-species-and-runner-fixes-v1",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792861684.3051913,
+    "updated_at": 1792876546.131215,
     "owner": "unidentified",
-    "completed_at": 1792861687.8335142
+    "started_by": "kilo:cli",
+    "continuations": [
+      {
+        "agent": "unidentified",
+        "from": "kilo:cli",
+        "at": 1792876546.131215
+      }
+    ],
+    "completed_at": 1792876550.2682753
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-phase2-pipeline",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/4] Add an end-to-end Phase 2 lead-selection run: curate -> screen -> consensus rank, a hashed run manifest, and a Markdown lead report.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792829820.3652809,
-      "timestamp_str": "2026-10-24 11:17:00",
-      "impact_assessment": {
-        "why": "The three Phase 2 commands work in isolation but nothing produces the Phase 2 deliverable as one reproducible, auditable run with provenance and evidence gaps.",
-        "benefits": "One command turns vendor CSVs and docking exports into a traceable lead set, and the manifest hashes make every artifact checkable after the fact.",
-        "risks": "contract: new manifest and report schemas plus a new CLI; dependency: none, standard library only; concurrency: outputs are atomic and each run owns its out-dir; state: no persisted state beyond generated artifacts.",
-        "mitigation": "Freeze the schemas in docs and a new ADR, hash every input and output, keep the three stages as the existing tested functions, and cover chain, empty-stage, report and manifest paths with tests."
-      }
-    },
-    {
-      "task_id": "pnn-phase2-pipeline",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 75 tests pass; Phase 4 gates 4/4 (test, hygiene, guidelines, secrets); pipeline CLI and report complete; checklists: passed; uncommitted pending authorization",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792831102.8404338,
-      "timestamp_str": "2026-10-24 11:38:22"
-    },
-    {
-      "task_id": "pnn-phase2-pipeline",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-phase2-pipeline' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792831401.01921,
-      "timestamp_str": "2026-10-24 11:43:21"
-    },
-    {
-      "task_id": "pnn-validation-suite-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/6] Target profile invariants and binding-pocket validator (pnn/target.py, CLI python -m pnn.target)",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792831702.2195055,
-      "timestamp_str": "2026-10-24 11:48:22",
-      "impact_assessment": {
-        "why": "PNN currently has in silico screening, curation, and docking consensus tools, but lacks target binding-pocket validation, realistic reference datasets for golden runs, and an executable Phase 3 in vitro assay ingestion pipeline to qualify leads into confirmed experimental hits.",
-        "benefits": "Verifiable target receptor profiles and grid coordinates prevent docking against incorrect pockets; realistic reference datasets enable turnkey golden-run validation; Phase 3 assay pipeline evaluates fluorogenic DQ-CS cleavage, PAMPA-BBB/MDCK-MDR1 permeability, and cytotoxicity counter-screens against explicit criteria.",
-        "risks": "contract: new schemas for assay CSVs and target definitions; dependency: none, Python standard library only; concurrency: atomic temp+fsync+replace for all generated outputs; state: no persistent state beyond generated CSV/JSON artifacts.",
-        "mitigation": "Strict validation of CSV contracts with clear remediation triads, comprehensive test suites covering edge cases and malformed rows, and recording ADR-005 in project memory."
-      }
-    },
-    {
-      "task_id": "pnn-validation-suite-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[6/6] Verification: 91 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); target, golden run and assay pipeline verified; checklists: passed; uncommitted pending authorization",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792832123.0900602,
-      "timestamp_str": "2026-10-24 11:55:23"
-    },
-    {
-      "task_id": "pnn-validation-suite-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-validation-suite-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792833201.943722,
-      "timestamp_str": "2026-10-24 12:13:21"
-    },
-    {
-      "task_id": "pnn-preclinical-studio-sar-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/6] In vivo PK/PD non-compartmental analysis and candidate selection engine (pnn/preclinical.py, CLI python -m pnn.preclinical)",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792833464.303022,
-      "timestamp_str": "2026-10-24 12:17:44",
-      "impact_assessment": {
-        "why": "PNN has progressed through in silico triage and in vitro assay qualification, but lacks in vivo pharmacokinetic/pharmacodynamic (PK/PD) candidate selection, SAR scaffold decomposition, and interactive visualization reporting for end-to-end decision making.",
-        "benefits": "Rigorous NCA PK analysis (Cmax, AUC, t1/2, F, Kp,brain) and in vivo PD (WFA+ reduction, ITT AUC) enables objective preclinical candidate advancement; SAR scaffold clustering guides chemical lead optimization; standalone HTML visualization studio provides intuitive graphical oversight without external dependencies.",
-        "risks": "contract: new preclinical CSV contracts and HTML output formats; dependency: none, Python standard library only; concurrency: atomic temporary file generation; state: no persistent state beyond generated CSV, JSON, and HTML reports.",
-        "mitigation": "Strict validation with remediation triads, unit tests covering mathematical edge cases, and registering ADR-006."
-      }
-    },
-    {
-      "task_id": "pnn-preclinical-studio-sar-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 118 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); preclinical, studio, and SAR pipelines verified; checklists: passed",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792858569.1116922,
-      "timestamp_str": "2026-10-24 19:16:09"
-    },
-    {
-      "task_id": "pnn-preclinical-studio-sar-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-preclinical-studio-sar-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792858572.3425012,
-      "timestamp_str": "2026-10-24 19:16:12"
-    },
-    {
-      "task_id": "pnn-one-click-and-mpo-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/4] Add one-click turnkey discovery runner (pnn/runner.py, run.py, start.bat, start.sh) and Phase 5 multiparametric optimization engine (pnn/mpo.py)",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792858761.463135,
-      "timestamp_str": "2026-10-24 19:19:21",
-      "impact_assessment": {
-        "why": "PNN has modular CLI pipelines for in silico triage, docking, in vitro assays, preclinical PK/PD, and SAR, but lacks a turnkey one-click launcher for rapid execution and visualization, and lacks a unified Phase 5 Multiparametric Optimization (MPO) desirability scoring engine for candidate selection.",
-        "benefits": "One-click start enables instant execution of the full discovery pipeline and launches the interactive dashboard in <1s; Phase 5 CNS MPO and Derringer-Suich composite desirability index systematically ranks clinical candidates across potency, BBB penetration, oral F, and safety margins.",
-        "risks": "contract: new runner and MPO CLI options and output schemas; dependency: none, Python standard library only; concurrency: atomic output writers; state: no persistent state outside generated reports.",
-        "mitigation": "Thorough unit and CLI tests, error remediation triads, and registering ADR-007."
-      }
-    },
     {
       "task_id": "pnn-one-click-and-mpo-v1",
       "phase": "phase 4",
@@ -241,6 +128,132 @@
       "status": "completed",
       "timestamp": 1792861687.833516,
       "timestamp_str": "2026-10-24 20:08:07",
+      "agent": "unidentified"
+    },
+    {
+      "task_id": "pnn-ind-enabling-safety-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/5] Implement IND-enabling safety pharmacology and repeat-dose toxicology assessment engine (pnn/safety.py) with CLI, contracts and report",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792865432.187584,
+      "timestamp_str": "2026-10-24 21:10:32",
+      "agent": "kilo:cli",
+      "impact_assessment": {
+        "why": "The roadmap's Week 29-36 IND-enabling package still lacks an executable safety assessment: existing modules cover efficacy, PK/PD, allometric dose projection and dynamics, but repeat-dose NOAEL studies, hERG/CYP liabilities and genotoxicity results are not ingested or judged against progression criteria.",
+        "benefits": "A deterministic, auditable safety gate that converts submitted GLP tox and safety pharmacology results into NOAEL HED, Phase 1 MRSD reconciliation, hERG/CYP margins and a SAFE/CAUTION/FAIL status, so a nominated candidate cannot reach the IND dossier without an explicit safety record.",
+        "risks": "contract: new CSV schemas for repeat-dose tox and safety pharmacology plus a new assessment CSV/JSON/report; dependency: none, standard library only; concurrency: atomic writers, no shared state; state: no persisted state beyond generated artifacts.",
+        "mitigation": "Freeze both CSV schemas in a doc and ADR-009, reuse the established triage/evidence-gap language (G-001), keep the module pure and deterministic, and cover parsing boundaries, missing evidence, each failure mode and CLI errors with tests."
+      }
+    },
+    {
+      "task_id": "pnn-ind-enabling-safety-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 177 tests pass (24 new safety tests); 4/4 gates pass (test, hygiene, guidelines, secrets); pnn.safety CLI and turnkey runner verified; IND-009 safety checklist now unchecked requirements; checklists: passed; uncommitted pending authorization",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792866946.1446831,
+      "timestamp_str": "2026-10-24 21:35:46",
+      "agent": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-ind-enabling-safety-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 177 tests pass (24 new safety tests); 4/4 gates pass (test, hygiene, guidelines, secrets); pnn.safety CLI and turnkey runner verified; ADR-009 recorded; IND dossier safety items are now unchecked requirements; checklists: passed; uncommitted pending authorization",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792866968.6435423,
+      "timestamp_str": "2026-10-24 21:36:08",
+      "agent": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-evidence-integrity-fixes-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/5] Remove fabricated defaults and wire measured evidence through IND confirmation, bioisostere SMILES/property math, dynamics missing-data handling, and pathway metrics",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792867929.0343163,
+      "timestamp_str": "2026-10-24 21:52:09",
+      "agent": "kilo:cli",
+      "impact_assessment": {
+        "why": "Verification found that pnn.ind invents Kp/F/dose/NOAEL values when columns are absent, bioisostere emits invalid SMILES with wrong property deltas, dynamics reports a fabricated STABLE_POSE from missing columns, and pathway reports absolute AKT levels as restoration. The gates passed because tests only assert positivity and shape.",
+        "benefits": "Every reported number becomes traceable to an input column or is explicitly UNKNOWN; generated SMILES stay syntactically valid; missing MD evidence can no longer produce a stable verdict; regimen recommendations follow computed metrics instead of hardcoded text.",
+        "risks": "contract: IND CSV/report semantics change for absent data, dynamics gains an UNKNOWN class, pathway gains a baseline-relative field; dependency: none, standard library only; concurrency: unchanged atomic writers; state: no persisted state beyond generated artifacts.",
+        "mitigation": "Keep existing function signatures where callers rely on them, add explicit evidence statuses instead of silent fallbacks, cover each defect with a failing-first test, align prose docs with the implemented rules, and rerun the 4 Phase 4 gates plus the golden run."
+      }
+    },
+    {
+      "task_id": "pnn-ind-enabling-safety-v1",
+      "phase": "superseded",
+      "phase_num": 4,
+      "description": "Superseded by 'pnn-evidence-integrity-fixes-v1' without --complete or --reset",
+      "status": "superseded",
+      "timestamp": 1792867929.0343163,
+      "timestamp_str": "2026-10-24 21:52:09",
+      "agent": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-evidence-integrity-fixes-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[5/5] Verification: 190 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); IND/dynamics/bioisostere/pathway defects fixed; lazy exports remove runpy warnings; IND MRSD reconciles with safety; ADR-010 recorded; checklists: passed; uncommitted pending authorization",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792870595.1670597,
+      "timestamp_str": "2026-10-24 22:36:35",
+      "agent": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-hed-species-and-runner-fixes-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/5] Select the most sensitive species by NOAEL HED (not raw NOAEL), wire bioisostere/pathway to the measured lead, warn on unusable --candidates, and correct tests that locked in the raw-NOAEL bug",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792871168.111584,
+      "timestamp_str": "2026-10-24 22:46:08",
+      "agent": "kilo:cli",
+      "impact_assessment": {
+        "why": "Verification found that pnn.safety and pnn.ind rank species by raw mg/kg NOAEL, so dog always beats rat despite the 3x body-surface-area conversion. Three of five Phase 1 MRSD values were inflated about 2x, and the test suite asserted the wrong species, so the gate could not catch it. The one-click runner also skipped bioisostere generation for the real lead (which lives in the repurposing library) and simulated a hardcoded 10 mg/kg rather than the measured dose.",
+        "benefits": "Phase 1 starting doses now follow the correct most-sensitive-species HED, tests fail if the ranking regresses to raw NOAEL, the nominated lead actually receives bioisostere and dosing analyses, and an unusable --candidates file is reported instead of producing silent UNMEASURED output.",
+        "risks": "contract: MRSD and most_sensitive_species values change for every multi-species compound; dependency: none, standard library only; concurrency: unchanged atomic writers; state: no persisted state beyond generated artifacts.",
+        "mitigation": "Add a shared HED-based selection helper used by both pnn.safety and pnn.ind, update the tests to assert HED ordering with hand-computed values, keep IND/safety reconciliation asserted, and rerun all 4 Phase 4 gates plus the golden run."
+      }
+    },
+    {
+      "task_id": "pnn-evidence-integrity-fixes-v1",
+      "phase": "superseded",
+      "phase_num": 4,
+      "description": "Superseded by 'pnn-hed-species-and-runner-fixes-v1' without --complete or --reset",
+      "status": "superseded",
+      "timestamp": 1792871168.111584,
+      "timestamp_str": "2026-10-24 22:46:08",
+      "agent": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-hed-species-and-runner-fixes-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "checklists: passed. Delivered IND-enabling safety pharmacology package (pnn.safety), evidence integrity in translational modules (ADR-009, ADR-010), HED-based most sensitive species selection in NOAEL/MRSD calculations, and turnkey runner lead nomination. 192/192 tests pass, 4/4 gates pass.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792876546.131215,
+      "timestamp_str": "2026-10-25 00:15:46",
+      "agent": "unidentified",
+      "continued_from": "kilo:cli"
+    },
+    {
+      "task_id": "pnn-hed-species-and-runner-fixes-v1",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-hed-species-and-runner-fixes-v1' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792876550.2682767,
+      "timestamp_str": "2026-10-25 00:15:50",
       "agent": "unidentified"
     }
   ]

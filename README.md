@@ -58,7 +58,8 @@ PNN/
 │   ├── experimental_protocols.md  <- In vitro/in vivo assay protocols
 │   └── preclinical_pipeline.md    <- Phase 4 in vivo PK/PD and candidate qualification
 ├── translational/                 <- Clinical translation and regulatory filing
-│   └── ind_filing.md              <- Human allometric scaling and IND dossier design
+│   ├── ind_filing.md              <- Human allometric scaling and IND dossier design
+│   └── safety_package.md          <- IND-enabling toxicology and safety pharmacology contract
 ├── data/                          <- Data storage
 │   ├── compounds/                 <- Compound libraries
 │   │   ├── repurposing_library.csv  <- Annotated CNS repurposing library
@@ -76,6 +77,9 @@ PNN/
 │   ├── preclinical/               <- In vivo PK/PD templates and datasets
 │   │   ├── pd_metabolic_template.csv  <- In vivo PD WFA/ITT metabolic outcome template
 │   │   └── pk_timecourse_template.csv  <- In vivo PK concentration-time series template
+│   ├── toxicology/                <- IND-enabling toxicology and safety pharmacology data
+│   │   ├── repeat_dose_tox_template.csv  <- Repeat-dose NOAEL/LOAEL study template
+│   │   └── safety_pharmacology_template.csv  <- hERG/CYP/genotoxicity panel template
 │   └── literature/                <- Extracted literature data (empty until populated)
 ├── docs/                          <- Documentation
 │   ├── cold_start_guide.md        <- AI cold-start instructions
@@ -100,6 +104,7 @@ PNN/
 │   ├── reports.py                 <- Atomic CSV/JSON writers
 │   ├── rules.py                   <- CNS/BBB property rules
 │   ├── runner.py                  <- One-click discovery pipeline runner
+│   ├── safety.py                  <- IND-enabling toxicology and safety pharmacology assessment
 │   ├── sar.py                     <- Bemis-Murcko scaffold extraction and SAR activity clustering
 │   ├── screen.py                  <- Tiering, scoring and ranking
 │   ├── selection.py               <- End-to-end pipeline execution and lead report
@@ -127,6 +132,7 @@ PNN/
     ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
     ├── test_run.py                <- Turnkey runner and launcher tests
+    ├── test_safety.py             <- IND-enabling toxicology and safety pharmacology tests
     ├── test_sar.py                <- Bemis-Murcko scaffold extraction and SAR tests
     ├── test_screen.py             <- Tiering, ranking and CSV ingestion
     ├── test_studio.py             <- Interactive HTML/SVG studio tests
@@ -230,6 +236,38 @@ python -m pnn.assay \
 
 Details are in [experimental/assay_pipeline.md](experimental/assay_pipeline.md).
 
+## IND-Enabling Safety & Toxicology Package
+
+`python -m pnn.safety` ingests repeat-dose NOAEL/LOAEL studies and the ICH S7A/S7B safety
+pharmacology panel (hERG, CYP3A4, Ames, micronucleus, CNS/respiratory NOAEL), computes the
+NOAEL-based HED and starting dose, and classifies candidates as `SAFE_TO_PROGRESS`, `CAUTION`
+or `FAIL_SAFETY`. Missing values stay UNKNOWN and are never treated as passes.
+
+```bash
+python -m pnn.safety --tox data/toxicology/repeat_dose_tox_template.csv \
+    --pharm data/toxicology/safety_pharmacology_template.csv \
+    --out output/safety_assessments.csv --json output/safety_summary.json \
+    --report output/safety_package.md
+```
+
+Contracts, thresholds and evidence limits are in [translational/safety_package.md](translational/safety_package.md).
+
+## IND Dose Projection & Dossier
+
+`python -m pnn.ind` projects HED, MRSD and human PK from measured preclinical inputs and compiles
+an IND nomination dossier. Missing measurements stay `UNMEASURED` and lower the compound's
+`evidence_status`; nothing is defaulted.
+
+```bash
+python -m pnn.ind --compounds data/compounds/vendor_library.csv \
+    data/compounds/repurposing_library.csv \
+    --candidates output/preclinical_candidates.csv \
+    --tox data/toxicology/repeat_dose_tox_template.csv \
+    --out output/human_dose_projections.csv --dossier output/ind_dossier.md
+```
+
+Details are in [translational/ind_filing.md](translational/ind_filing.md).
+
 ## Golden Run Verification
 
 To verify the end-to-end pipeline against realistic benchmark datasets in `data/`:
@@ -250,55 +288,32 @@ Hypothalamic PNNs (primarily composed of chondroitin sulfate proteoglycans - CSP
 ### Primary Targets (PNN Degradation/Softening)
 | Target | Function | Modality | BBB Penetration Strategy |
 |--------|----------|----------|-------------------------|
-| **ChABC** (Chondroitinase ABC) | Degrades CSPG GAG chains | Enzyme/Protein | Fusion with BBB shuttle (Angiopep-2, TfR) |
-| **MMP-2/9** | Endogenous CSPG cleavage | Small molecule activators | Lipophilic prodrugs |
-| **PTPσ** (RPTPσ) | CSPG receptor mediating inhibition | Antagonists/antibodies | Peptide mimetics |
-| **LAR** (Leukocyte common antigen-related) | CSPG receptor | Antagonists | Small molecules |
-| **NgR1/3** (Nogo receptors) | CSPG co-receptors | Antagonists | Cyclic peptides |
+| **ChABC** (Chondroitinase ABC) | Degrades CSPG GAG chains | Enzyme | Angiopep-2/TfR fusion |
+| **MMP-2/9** | Endogenous CSPG cleavage | Small-molecule activators | Lipophilic prodrugs |
+| **PTPσ** (RPTPσ) | CSPG receptor | Antagonists/antibodies | Peptide mimetics |
+| **LAR** | CSPG receptor | Antagonists | Small molecules |
+| **NgR1/3** | CSPG co-receptors | Antagonists | Cyclic peptides |
 
 ### Secondary Targets (Insulin Signaling Restoration)
-| Target | Role | Strategy |
-|--------|------|----------|
-| **Insulin Receptor (IR)** | Primary insulin sensor | Allosteric modulators |
-| **IRS-1/2** | Downstream adaptors | Phosphatase inhibitors (PTP1B) |
-| **PI3K** | Signal transduction | Activators |
-| **AKT/PKB** | Metabolic effector | Activators |
-| **mTORC1** | Nutrient sensing | Modulators |
-| **PTEN** | Negative regulator | Inhibitors |
+IR (allosteric modulators), IRS-1/2 and PTP1B (phosphatase inhibition), PI3K and AKT (activators),
+mTORC1 (modulators), PTEN (inhibitors).
 
 ## BBB Penetration Strategies for Oral Agents
 
-### Physicochemical Rules (Modified Lipinski for CNS)
-- **MW**: 200-450 Da (optimal 300-400)
-- **logP**: 1.5-3.5 (optimal 2-3)
-- **TPSA**: <70 Å² (optimal <60)
-- **HBD**: ≤3
-- **HBA**: ≤7
-- **Rotatable bonds**: ≤7
-- **pKa**: 7-9 (for basic amines) or 3-5 (for acids)
-- **Charge**: Neutral or weakly basic at pH 7.4
+**Physicochemical windows (CNS-modified Lipinski)**: MW 200-450 Da (optimal 300-400), logP 1.5-3.5
+(optimal 2-3), TPSA <70 Å² (optimal <60), HBD ≤3, HBA ≤7, rotatable bonds ≤7, pKa 7-9 (bases) or
+3-5 (acids), neutral or weakly basic at pH 7.4.
 
-### Transporter-Mediated Strategies
-1. **LAT1** (Large neutral amino acid transporter) - amino acid mimetics
-2. **MCT1** (Monocarboxylate transporter) - carboxylic acid prodrugs
-3. **GLUT1** - glucose conjugates
-4. **Nucleoside transporters** - nucleoside analogs
+**Transporter-mediated**: LAT1 amino-acid mimetics, MCT1 carboxylic-acid prodrugs, GLUT1 glucose
+conjugates, nucleoside analogs.
 
-### Receptor-Mediated Transcytosis (RMT)
-- **Transferrin Receptor (TfR)** - anti-TfR antibodies/peptides
-- **Insulin Receptor** - insulin/peptide conjugates
-- **LRP1** - Angiopep-2, ApoE mimetics
-- **Dipyridamole-sensitive nucleoside transporter**
+**Receptor-mediated transcytosis**: anti-TfR antibodies/peptides, insulin conjugates, LRP1
+(Angiopep-2, ApoE mimetics).
 
 ## Recursive Language Model Compatibility
 
-This project is designed to work identically across AI cold starts through:
-
-1. **Structured Documentation**: All knowledge captured in markdown with consistent formatting
-2. **Explicit Protocols**: Step-by-step procedures for every computational/experimental task
-3. **Version-Controlled Data**: Compound libraries, assay results, literature extractions
-4. **Deterministic Pipelines**: Computational workflows with fixed parameters/seeds
-5. **Self-Contained Context**: Each document contains sufficient context for independent use
+Knowledge is markdown-structured, protocols are explicit, data is version-controlled, pipelines are
+deterministic, and every document is self-contained for independent cold starts.
 
 ### Cold-Start Protocol
 When an AI agent starts fresh on this project:
@@ -377,17 +392,12 @@ AND ("chondroitinase" OR "MMP" OR "PTPσ" OR "LAR" OR "NgR" OR "small molecule")
 | Oral bioavailability | High | Critical | Prodrug strategies, formulation optimization |
 
 ## References Management
-All references stored in `data/literature/references.bib` (BibTeX format) with tags:
-- `#PNN_structure` - PNN composition/biology
-- `#hypothalamus_insulin` - Hypothalamic insulin signaling
-- `#BBB_penetration` - BBB transport mechanisms
-- `#oral_CNS_drugs` - Successful oral CNS drug case studies
-- `#chondroitinase` - ChABC and variants
-- `#CSPG_receptors` - PTPσ, LAR, NgR biology
-- `#obesity_models` - DIO, genetic obesity models
+References live in `data/literature/references.bib` (BibTeX), tagged `#PNN_structure`,
+`#hypothalamus_insulin`, `#BBB_penetration`, `#oral_CNS_drugs`, `#chondroitinase`,
+`#CSPG_receptors` and `#obesity_models`.
 
 ---
 
-*Last Updated: 2026-10-22*
-*Version: 1.3.0*
-*Compatible with: Recursive Language Model cold starts*
+*Last Updated: 2026-10-24*
+*Version: 1.5.0*
+*Compatible with AI cold starts*

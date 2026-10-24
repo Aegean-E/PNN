@@ -5,7 +5,10 @@ import unittest
 from pathlib import Path
 
 from pnn.bioisostere import (
+    BIOISOSTERE_RULES,
     BioisostereError,
+    _ring_label_occurrences,
+    _ring_labels_balanced,
     generate_bioisosteres,
     main,
     render_bioisostere_report,
@@ -15,7 +18,6 @@ from pnn.bioisostere import (
 
 class TestBioisostere(unittest.TestCase):
     def test_generate_bioisosteres(self) -> None:
-        # Test SMILES with benzene and amide motifs
         smiles = "c1ccccc1C(=O)NC1CCOCC1"
         analogs = generate_bioisosteres(
             parent_id="TEST-01",
@@ -30,12 +32,63 @@ class TestBioisostere(unittest.TestCase):
         )
         self.assertGreater(len(analogs), 0)
         self.assertEqual(analogs[0].parent_id, "TEST-01")
-        self.assertTrue(analogs[0].analog_id.startswith("TEST-01-BIO"))
-        self.assertTrue(any("FAVORABLE" in a.optimization_verdict for a in analogs))
+        for analog in analogs:
+            self.assertTrue(analog.analog_id.startswith("TEST-01-BIO"))
+            self.assertTrue(_ring_labels_balanced(analog.analog_smiles), analog.analog_smiles)
+            self.assertTrue(any(rule.rule_id == analog.rule_id for rule in BIOISOSTERE_RULES))
 
         row = analogs[0].as_row()
         self.assertIn("analog_smiles", row)
         self.assertIn("cns_mpo_score", row)
+        self.assertIn("rule_id", row)
+
+    def test_ring_label_parser_ignores_isotope_brackets(self) -> None:
+        counts = _ring_label_occurrences("C([2H])([2H])N1CCNCC1")
+        self.assertEqual(counts, {"1": 2})
+
+    def test_replacement_does_not_split_ring_context(self) -> None:
+        # The amide carbon in PNN-101 is the aromatic ring atom C2; replacing it would corrupt the ring.
+        smiles = "CC1=C(C=CC(=C1)NC(=O)C2=CC=C(C=C2)CN3CCNCC3)C"
+        analogs = generate_bioisosteres(
+            parent_id="PNN-101",
+            smiles=smiles,
+            mw=349.46,
+            logp=2.65,
+            tpsa=48.4,
+            hbd=2,
+            hba=4,
+            rotb=4,
+            pka=8.2,
+        )
+        rule_ids = {a.rule_id for a in analogs}
+        self.assertNotIn("BIO-03", rule_ids)
+        for analog in analogs:
+            self.assertNotIn("C1CC12", analog.analog_smiles)
+            self.assertTrue(_ring_labels_balanced(analog.analog_smiles), analog.analog_smiles)
+
+    def test_property_deltas_match_rule_table(self) -> None:
+        analogs = generate_bioisosteres(
+            parent_id="P",
+            smiles="c1ccccc1C(=O)OC",
+            mw=200.0,
+            logp=2.0,
+            tpsa=40.0,
+            hbd=0,
+            hba=3,
+            rotb=4,
+        )
+        by_rule = {a.rule_id: a for a in analogs}
+        self.assertIn("BIO-06", by_rule)
+        ester = by_rule["BIO-06"]
+        rule = next(r for r in BIOISOSTERE_RULES if r.rule_id == "BIO-06")
+        self.assertAlmostEqual(ester.mw, 200.0 + rule.delta_mw)
+        self.assertAlmostEqual(ester.tpsa, 40.0 + rule.delta_tpsa)
+
+    def test_cyclopropyl_delta_is_not_a_rotatable_increase(self) -> None:
+        rule = next(r for r in BIOISOSTERE_RULES if r.rule_id == "BIO-03")
+        self.assertLess(rule.delta_rotb, 0)
+        self.assertEqual(rule.delta_hba, 0)
+        self.assertAlmostEqual(rule.delta_mw, 40.0)
 
     def test_run_bioisostere_pipeline_missing_file_raises(self) -> None:
         with self.assertRaises(BioisostereError):
@@ -51,12 +104,12 @@ class TestBioisostere(unittest.TestCase):
         for a in analogs:
             self.assertEqual(a.parent_id, "PNN-101")
             self.assertGreater(a.mw, 0.0)
+            self.assertTrue(_ring_labels_balanced(a.analog_smiles), a.analog_smiles)
 
     def test_render_bioisostere_report(self) -> None:
-        smiles = "c1ccccc1C(=O)NC1CCOCC1"
         analogs = generate_bioisosteres(
             parent_id="PNN-101",
-            smiles=smiles,
+            smiles="c1ccccc1C(=O)NC1CCOCC1",
             mw=320.0,
             logp=2.4,
             tpsa=50.0,
@@ -67,6 +120,7 @@ class TestBioisostere(unittest.TestCase):
         report = render_bioisostere_report(analogs, "PNN-101")
         self.assertIn("Bioisosteric Replacement", report)
         self.assertIn("PNN-101", report)
+        self.assertIn("Method Limits", report)
         self.assertIn("Synthetic Priority Recommendations", report)
 
     def test_bioisostere_cli(self) -> None:

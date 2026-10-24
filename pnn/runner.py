@@ -24,7 +24,6 @@ from .bioisostere import (
     run_bioisostere_pipeline,
 )
 from .dynamics import (
-    DYNAMICS_SUMMARY_FIELDS,
     run_dynamics_pipeline,
 )
 from .ind import (
@@ -44,14 +43,21 @@ from .preclinical import (
     render_preclinical_report,
 )
 from .rank import RANK_FIELDS
-from .reports import write_csv, write_json, write_text
+from .reports import write_csv, write_text
+from .safety import (
+    SAFETY_FIELDS,
+    assess_safety,
+    load_safety_pharmacology,
+    load_tox_studies,
+    render_safety_report,
+)
 from .sar import (
     SCAFFOLD_CLUSTER_FIELDS,
     analyze_sar,
     load_compounds as load_sar_compounds,
     render_sar_report,
 )
-from .selection import PipelineError, render_lead_report, select_leads
+from .selection import render_lead_report, select_leads
 from .studio import (
     generate_docking_heatmap_svg,
     generate_pk_curve_svg,
@@ -77,6 +83,9 @@ class RunSummary:
     output_dir: Path
     studio_html_path: Path
     analogs_count: int = 0
+    safety_assessed_count: int = 0
+    safety_safe_count: int = 0
+    safety_failed_count: int = 0
 
 
 def execute_turnkey_pipeline(
@@ -91,6 +100,8 @@ def execute_turnkey_pipeline(
     out_dir: Path,
     min_tier: str = "B",
     emit_root: bool = False,
+    tox_csv: Optional[Path] = None,
+    safety_pharm_csv: Optional[Path] = None,
 ) -> RunSummary:
     """Execute complete end-to-end PNN discovery workflow from libraries to interactive studio."""
     start_time = time.perf_counter()
@@ -202,32 +213,68 @@ def execute_turnkey_pipeline(
 
     # 6. Advanced Translational Capabilities (IND Dossier, Bioisosteres, Pathway ODE, MD Dynamics)
     lead_id = candidates[0].compound_id if candidates else "PNN-101"
+    library_paths = [vendor_csv]
+    if repurposing_csv and repurposing_csv.is_file():
+        library_paths.append(repurposing_csv)
+
     analogs_count = 0
-    try:
-        analogs = run_bioisostere_pipeline(vendor_csv, target_parent_id=lead_id)
+    for library_path in library_paths:
+        try:
+            analogs = run_bioisostere_pipeline(library_path, target_parent_id=lead_id)
+        except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+            continue
         if analogs:
             analogs_count = len(analogs)
             write_csv(out_dir / "bioisosteric_analogs.csv", ANALOG_FIELDS, [a.as_row() for a in analogs])
             write_text(out_dir / "bioisostere_report.md", render_bioisostere_report(analogs, lead_id))
-    except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
-        analogs_count = 0
-
+            break
+    if analogs_count == 0:
+        # Record the stage outcome instead of silently omitting the artifact.
+        write_text(out_dir / "bioisostere_report.md", render_bioisostere_report([], lead_id))
+    lead_pk: dict[str, float] = {}
     if pk_csv and pk_csv.is_file():
         try:
-            projections, dossier_md = compile_ind_dossier(lead_id, compounds_path=vendor_csv, candidates_path=pk_csv)
+            measured_pk: dict[str, dict[str, float]] = {}
+            for cid, profiles in pk_profiles.items():
+                entry: dict[str, float] = {}
+                po_plasma = profiles.get("PO_plasma")
+                iv_plasma = profiles.get("IV_plasma")
+                if po_plasma is not None:
+                    entry["dose_mg_kg"] = po_plasma.dose_mg_kg
+                if iv_plasma is not None:
+                    if iv_plasma.cl_l_h_kg is not None:
+                        entry["cl_l_h_kg"] = iv_plasma.cl_l_h_kg
+                    if iv_plasma.vd_l_kg is not None:
+                        entry["vd_l_kg"] = iv_plasma.vd_l_kg
+                if entry:
+                    measured_pk[cid] = entry
+            lead_pk = measured_pk.get(lead_id, {})
+
+            projections, dossier_md = compile_ind_dossier(
+                lead_id,
+                compounds_path=library_paths,
+                candidates_path=candidates_csv,
+                tox_path=tox_csv,
+                extra_pk=measured_pk,
+            )
             write_text(out_dir / "ind_dossier.md", dossier_md)
             write_csv(out_dir / "human_dose_projections.csv", DOSE_PROJECTION_FIELDS, [p.as_row() for p in projections])
         except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
             pass
 
-    try:
-        p_points, p_summary = simulate_circuit_dynamics(
-            compound_id=lead_id, dose_mg_kg=10.0, regimen="INTERMITTENT_PULSATILE", duration_days=14
-        )
-        write_csv(out_dir / "pathway_simulation.csv", SIMULATION_FIELDS, [p.as_row() for p in p_points])
-        write_text(out_dir / "pathway_report.md", render_pathway_report(p_summary, p_points))
-    except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
-        pass
+    # Simulate only the measured efficacious dose; an unmeasured dose is never substituted.
+    pathway_dose = lead_pk.get("dose_mg_kg")
+    if pathway_dose is None and lead_id in pd_outcomes:
+        pathway_dose = pd_outcomes[lead_id].dose_mg_kg
+    if pathway_dose is not None:
+        try:
+            p_points, p_summary = simulate_circuit_dynamics(
+                compound_id=lead_id, dose_mg_kg=pathway_dose, regimen="INTERMITTENT_PULSATILE", duration_days=14
+            )
+            write_csv(out_dir / "pathway_simulation.csv", SIMULATION_FIELDS, [p.as_row() for p in p_points])
+            write_text(out_dir / "pathway_report.md", render_pathway_report(p_summary, p_points))
+        except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+            pass
 
     traj_template = Path("data/dynamics/ptpsigma_md_trajectory_template.csv")
     if traj_template.is_file():
@@ -235,6 +282,32 @@ def execute_turnkey_pipeline(
             run_dynamics_pipeline(traj_template, compound_id=lead_id, target_id="PTPsigma", out_dir=out_dir)
         except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
             pass
+
+    # 7. IND-Enabling Safety Pharmacology and Repeat-Dose Toxicology Package
+    safety_assessed_count = 0
+    safety_safe_count = 0
+    safety_failed_count = 0
+    try:
+        tox_studies = load_tox_studies(tox_csv) if tox_csv and tox_csv.is_file() else []
+        safety_pharm = (
+            load_safety_pharmacology(safety_pharm_csv)
+            if safety_pharm_csv and safety_pharm_csv.is_file()
+            else {}
+        )
+        if tox_studies or safety_pharm:
+            assessments = assess_safety(tox_studies, safety_pharm)
+            write_csv(out_dir / "safety_assessments.csv", SAFETY_FIELDS, [a.as_row() for a in assessments])
+            write_text(
+                out_dir / "safety_package.md",
+                render_safety_report(assessments, {"safety_factor": 10.0}),
+            )
+            safety_assessed_count = len(assessments)
+            safety_safe_count = sum(1 for a in assessments if a.status == "SAFE_TO_PROGRESS")
+            safety_failed_count = sum(1 for a in assessments if a.status == "FAIL_SAFETY")
+    except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+        safety_assessed_count = 0
+        safety_safe_count = 0
+        safety_failed_count = 0
 
     elapsed = time.perf_counter() - start_time
     clinical_count = sum(1 for c in candidates if c.status == "CLINICAL_CANDIDATE")
@@ -251,6 +324,9 @@ def execute_turnkey_pipeline(
         output_dir=out_dir,
         studio_html_path=studio_html,
         analogs_count=analogs_count,
+        safety_assessed_count=safety_assessed_count,
+        safety_safe_count=safety_safe_count,
+        safety_failed_count=safety_failed_count,
     )
 
 
@@ -267,6 +343,11 @@ def print_run_banner(summary: RunSummary) -> None:
     print(f"  * Bemis-Murcko Scaffolds:    {summary.scaffolds_count}")
     if summary.analogs_count > 0:
         print(f"  * Bioisosteric Analogs:      {summary.analogs_count}")
+    if summary.safety_assessed_count > 0:
+        print(
+            f"  * IND Safety Cleared:        {summary.safety_safe_count}/{summary.safety_assessed_count} "
+            f"({summary.safety_failed_count} failed)"
+        )
     print(f"  * Execution Time:            {summary.elapsed_seconds:.2f} seconds")
     print(f"  * Output Directory:          {summary.output_dir}")
     print(f"  * Interactive Dashboard:     {summary.studio_html_path.resolve()}")
@@ -288,6 +369,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cytotoxicity", default="data/assays/cytotoxicity_template.csv", help="CellTiter-Glo cytotoxicity CSV")
     parser.add_argument("--pk", default="data/preclinical/pk_timecourse_template.csv", help="in vivo PK time series CSV")
     parser.add_argument("--pd", default="data/preclinical/pd_metabolic_template.csv", help="in vivo PD outcomes CSV")
+    parser.add_argument(
+        "--tox",
+        default="data/toxicology/repeat_dose_tox_template.csv",
+        help="repeat-dose toxicology NOAEL/LOAEL CSV",
+    )
+    parser.add_argument(
+        "--safety-pharm",
+        dest="safety_pharm",
+        default="data/toxicology/safety_pharmacology_template.csv",
+        help="hERG/CYP/genotoxicity safety pharmacology CSV",
+    )
     parser.add_argument("--out-dir", default="output", help="destination directory for all generated artifacts")
     parser.add_argument("--open", dest="open_browser", action="store_true", help="explicitly enable browser launch (enabled by default)")
     parser.add_argument("--no-browser", dest="no_browser", action="store_true", help="suppress automatically opening studio.html in browser")
@@ -308,6 +400,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             pd_csv=Path(args.pd) if args.pd else None,
             out_dir=Path(args.out_dir),
             emit_root=(Path(args.out_dir) == Path("output")),
+            tox_csv=Path(args.tox) if args.tox else None,
+            safety_pharm_csv=Path(args.safety_pharm) if args.safety_pharm else None,
         )
         print_run_banner(summary)
 

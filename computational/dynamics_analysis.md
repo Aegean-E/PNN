@@ -2,40 +2,51 @@
 
 ## Overview
 
-Molecular Dynamics (MD) trajectory analysis evaluates the nanosecond-scale kinetic stability of candidate ligand binding poses within perineuronal net receptor pockets (such as the Protein Tyrosine Phosphatase Sigma [PTP$\sigma$] CSPG binding pocket).
+`pnn.dynamics` evaluates nanosecond-scale kinetic stability of docked ligand poses in perineuronal
+net receptor pockets (for example the PTPσ CSPG binding pocket). Static docking scores do not
+guarantee residence time; this module quantifies pose drift, pocket breathing and contact
+persistence across trajectory frames.
 
-In virtual docking screening, high static affinity scores (e.g., AutoDock Vina or Glide) do not guarantee physical residence time or resistance to thermal fluctuations. The `pnn.dynamics` module evaluates time-resolved trajectories to quantify pose drift, pocket breathing, and intermolecular contact persistence.
+The analyzer only reports what the input supplies. Optional columns that are absent stay
+`UNMEASURED`; they are never replaced with defaults.
+
+## Input Contract
+
+Required columns (one alias each):
+
+- `time_ns` (`time`, `frame_ns`)
+- `ligand_rmsd_angstrom` (`ligand_rmsd`, `rmsd_ligand`, `rmsd_lig`)
+
+Optional columns:
+
+- `protein_backbone_rmsd` (`protein_rmsd`, `rmsd_protein`, `rmsd_rec`)
+- `key_contacts_count` (`contacts_count`, `contacts`, `num_contacts`)
+- `mmgbsa_binding_dg` (`mmgbsa_dg`, `binding_dg`, `dg_bind`)
+- Residue contact flags `contact_<RES>` or `res_<RES>` (`1/true/yes` means active).
+
+At least two frames are required.
 
 ## Key Trajectory Metrics
 
-1. **Ligand RMSD ($\text{RMSD}_{\text{lig}}$)**:
-   - Measures root-mean-square coordinate deviation of ligand heavy atoms relative to the docked starting pose over time $t$.
-   - **Stable Threshold**: Mean $< 2.0$ Å, Maximum $< 3.2$ Å.
-
-2. **RMSD Drift ($\Delta \text{RMSD}$)**:
-   - Difference between the average RMSD in the final 20% of the simulation and the initial 20%.
-   - Values $\ge 1.5$ Å indicate progressive translational creep or impending dissociation from the binding site.
-
-3. **Protein Backbone RMSD ($\text{RMSD}_{\text{prot}}$)**:
-   - Confirms that the target receptor fold remains stable throughout simulation ($< 2.5$ Å).
-
-4. **Pocket Contact Persistence**:
-   - Percentage of trajectory frames in which key electrostatic and hydrogen bonding interactions are preserved.
-   - For PTP$\sigma$, critical basic pocket residues include:
-     - **Lys201**: Core CSPG sulfate coordinator.
-     - **Arg204**: Key electrostatic salt bridge.
-     - **Lys207**: Outer pocket basic anchor.
-     - **Arg210**: Secondary salt bridge partner.
-
-5. **MM-GBSA Free Energy ($\Delta G_{\text{bind}}$)**:
-   - Continuum electrostatic solvation binding free energy sampled across trajectory frames.
-   - Optimal threshold: $\le -25.0\text{ kcal/mol}$.
+1. **Ligand RMSD**: mean, standard deviation and maximum; stable threshold mean < 2.0 Å and max
+   < 3.2 Å.
+2. **RMSD drift**: mean of the final 20% of frames minus the mean of the initial 20%.
+3. **Protein backbone RMSD**: optional; confirms the receptor fold remains stable (< 2.5 Å).
+4. **Pocket contact persistence**: optional per-residue percentage of frames with the contact active.
+5. **MM-GBSA free energy**: optional; strong binding is ≤ −25.0 kcal/mol.
 
 ## Pose Stability Classification
 
-- **`STABLE_POSE`**: Mean ligand RMSD $< 2.0$ Å, drift $< 1.0$ Å, contact persistence $> 75\%$, protein backbone $< 2.5$ Å.
-- **`MODERATE_MOBILITY`**: Mean ligand RMSD $2.0 - 3.5$ Å, contact persistence $50\% - 75\%$, or moderate drift.
-- **`UNSTABLE_DRIFT`**: Mean ligand RMSD $> 3.5$ Å, contact persistence $< 50\%$, or dissociation event.
+Contact counts are required for a verdict. Without them the class is `INSUFFICIENT_EVIDENCE`, the
+stability score is `UNMEASURED`, and the report says so.
+
+- **`STABLE_POSE`**: mean ligand RMSD < 2.0 Å, drift < 1.0 Å, mean contacts ≥ 2.0, max RMSD < 3.2 Å.
+- **`MODERATE_MOBILITY`**: mean ligand RMSD ≤ 3.5 Å, drift < 2.0 Å, mean contacts ≥ 1.0.
+- **`UNSTABLE_DRIFT`**: mean ligand RMSD > 3.5 Å, drift ≥ 2.0 Å, or mean contacts < 1.0.
+
+Evidence status is `COMPLETE` when protein RMSD, contacts and MM-GBSA are all present, `PARTIAL`
+when the pose verdict is computable but one of those is absent, and `INSUFFICIENT_EVIDENCE` when the
+verdict itself cannot be reached.
 
 ## Command-Line Usage
 
@@ -44,13 +55,12 @@ python -m pnn.dynamics \
   --trajectory data/dynamics/ptpsigma_md_trajectory_template.csv \
   --compound PNN-101 \
   --target PTPsigma \
-  --out-dir output/dynamics \
-  --report \
-  --svg
+  --out-dir output/dynamics
 ```
 
-The command generates:
-- `{compound}_trajectory_metrics.csv`: Summary statistics and stability score.
-- `{compound}_dynamics_summary.json`: JSON output for programmatic pipeline consumption.
-- `{compound}_dynamics_report.md`: Markdown report detailing residue persistence.
-- `{compound}_rmsd_trajectory.svg`: Vector time-series chart showing RMSD versus simulation time.
+The command always writes:
+
+- `{compound}_trajectory_metrics.csv`: summary statistics, stability class, score and evidence status.
+- `{compound}_dynamics_summary.json`: JSON for programmatic consumption.
+- `{compound}_dynamics_report.md`: Markdown report with `UNMEASURED` markers and residue persistence.
+- `{compound}_rmsd_trajectory.svg`: RMSD time series (protein trace only when supplied).

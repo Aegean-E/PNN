@@ -1,3 +1,4 @@
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,6 +36,8 @@ class TestTurnkeyRunner(unittest.TestCase):
         cytotoxicity_csv = Path("data/assays/cytotoxicity_template.csv")
         pk_csv = Path("data/preclinical/pk_timecourse_template.csv")
         pd_csv = Path("data/preclinical/pd_metabolic_template.csv")
+        tox_csv = Path("data/toxicology/repeat_dose_tox_template.csv")
+        safety_pharm_csv = Path("data/toxicology/safety_pharmacology_template.csv")
 
         if not vendor_csv.is_file() or not docking_csv.is_file():
             return
@@ -51,16 +54,40 @@ class TestTurnkeyRunner(unittest.TestCase):
                 pk_csv=pk_csv,
                 pd_csv=pd_csv,
                 out_dir=out_dir,
+                tox_csv=tox_csv,
+                safety_pharm_csv=safety_pharm_csv,
             )
             self.assertGreater(summary.curated_count, 0)
             self.assertGreater(summary.shortlisted_count, 0)
             self.assertGreater(summary.scaffolds_count, 0)
+            self.assertGreater(summary.safety_assessed_count, 0)
             self.assertTrue((out_dir / "shortlist.csv").is_file())
             self.assertTrue((out_dir / "lead_report.md").is_file())
             self.assertTrue((out_dir / "qualified_hits.csv").is_file())
             self.assertTrue((out_dir / "preclinical_candidates.csv").is_file())
             self.assertTrue((out_dir / "sar_clusters.csv").is_file())
             self.assertTrue((out_dir / "studio.html").is_file())
+            self.assertTrue((out_dir / "safety_assessments.csv").is_file())
+            self.assertTrue((out_dir / "safety_package.md").is_file())
+
+            # The dossier must nominate the computed clinical candidate, not a hardcoded default.
+            dossier = (out_dir / "ind_dossier.md").read_text(encoding="utf-8")
+            self.assertIn("**Nominated Lead Compound**: `PNN-REP-01`", dossier)
+            self.assertIn("**Evidence Status**: **COMPLETE**", dossier)
+            with (out_dir / "human_dose_projections.csv").open("r", encoding="utf-8", newline="") as handle:
+                projection_rows = list(csv.DictReader(handle))
+            self.assertEqual(projection_rows[0]["compound_id"], "PNN-REP-01")
+            self.assertEqual(projection_rows[0]["evidence_status"], "COMPLETE")
+            self.assertEqual(projection_rows[0]["brain_kp"], "0.73")
+
+            # The IND MRSD and the safety NOAEL-based dose must reconcile for the same lead.
+            with (out_dir / "safety_assessments.csv").open("r", encoding="utf-8", newline="") as handle:
+                safety_rows = {row["compound_id"]: row for row in csv.DictReader(handle)}
+            self.assertAlmostEqual(
+                float(safety_rows["PNN-REP-01"]["phase1_mrsd_mg"]),
+                float(projection_rows[0]["phase1_mrsd_mg"]),
+                places=2,
+            )
 
             # Verify banner printing without UnicodeEncodeError
             print_run_banner(summary)
@@ -71,6 +98,8 @@ class TestTurnkeyRunner(unittest.TestCase):
             rc = main(["--no-browser", "--out-dir", str(out_dir)])
             self.assertEqual(rc, 0)
             self.assertTrue((out_dir / "studio.html").is_file())
+            self.assertTrue((out_dir / "safety_assessments.csv").is_file())
+            self.assertTrue((out_dir / "safety_package.md").is_file())
 
     @patch("webbrowser.open_new_tab")
     def test_runner_cli_execution_auto_opens_browser(self, mock_open) -> None:

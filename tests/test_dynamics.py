@@ -102,10 +102,43 @@ class TestDynamics(unittest.TestCase):
                 "--trajectory", str(template_csv),
                 "--compound", "PNN-101",
                 "--out-dir", str(out_dir),
-                "--report",
-                "--svg",
             ])
             self.assertEqual(exit_code, 0)
+
+    def test_missing_optional_columns_produce_insufficient_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            trajectory = Path(tmp_dir) / "ligand_only.csv"
+            trajectory.write_text(
+                "time_ns,ligand_rmsd\n0,1.0\n5,1.1\n10,1.2\n15,1.1\n20,1.0\n",
+                encoding="utf-8",
+            )
+            points = load_trajectory_csv(trajectory)
+            analysis = analyze_trajectory(points, "PNN-101", "PTPsigma")
+            self.assertEqual(analysis.stability_class, "INSUFFICIENT_EVIDENCE")
+            self.assertEqual(analysis.evidence_status, "INSUFFICIENT_EVIDENCE")
+            self.assertIsNone(analysis.stability_score)
+            self.assertIsNone(analysis.mean_contacts)
+            self.assertIsNone(analysis.min_contacts)
+            self.assertIsNone(analysis.mean_protein_rmsd)
+            self.assertIsNone(analysis.mean_mmgbsa_dg)
+            row = analysis.as_row()
+            self.assertEqual(row["stability_score"], "")
+            self.assertEqual(row["mean_contacts"], "")
+            self.assertEqual(row["mean_mmgbsa_dg"], "")
+            report = render_trajectory_report(analysis)
+            self.assertIn("UNMEASURED", report)
+            self.assertNotIn("STABLE_POSE", report)
+
+    def test_partial_evidence_keeps_verdict_but_flags_gaps(self) -> None:
+        points = [
+            TrajectoryPoint(time_ns=float(i), ligand_rmsd=1.2, contacts_count=4)
+            for i in range(10)
+        ]
+        analysis = analyze_trajectory(points, "PNN-101", "PTPsigma")
+        self.assertEqual(analysis.stability_class, "STABLE_POSE")
+        self.assertEqual(analysis.evidence_status, "PARTIAL")
+        self.assertIsNone(analysis.mean_protein_rmsd)
+        self.assertIsNone(analysis.mean_mmgbsa_dg)
 
 
 if __name__ == "__main__":

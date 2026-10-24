@@ -6,20 +6,24 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `49`
-- **Total Classes**: `79`
-- **Total Top-Level Functions**: `175`
-- **Total Class Methods**: `187`
-- **Total Source Lines**: `10439`
+- **Total Python Modules**: `51`
+- **Total Classes**: `87`
+- **Total Top-Level Functions**: `205`
+- **Total Class Methods**: `229`
+- **Total Source Lines**: `12030`
 
 ---
 
 ## 📦 Modules & Exported Symbols
 
 ### [`pnn/__init__.py`](pnn/__init__.py)
-> *Phase 2, Phase 3, Phase 4, and Phase 5 discovery and preclinical pipeline for PNN.*
+> *Phase 2-5 discovery, preclinical and translational pipeline for PNN.*
 
-**Size**: `202` lines (`4563` bytes)
+**Size**: `129` lines (`4271` bytes)
+
+**Functions:**
+- `def __getattr__(name)`
+- `def __dir__()`
 
 ---
 
@@ -58,7 +62,7 @@
 ### [`pnn/bioisostere.py`](pnn/bioisostere.py)
 > *Bioisosteric replacement and metabolic soft-spot optimization engine for PNN.*
 
-**Size**: `415` lines (`15348` bytes)
+**Size**: `526` lines (`19664` bytes)
 
 **Classes:**
 - `class BioisostereError` - *Raised when compound SMILES or bioisosteric transformation rules are invalid.*
@@ -67,8 +71,14 @@
   - Method `.as_row()`
 
 **Functions:**
+- `def _ring_label_occurrences(smiles)` - *Count single-digit and %nn ring labels in a SMILES string (label -> occurrences).*
+- `def _ring_labels_balanced(smiles)` - *Return True when every ring label is opened and closed (even occurrence count).*
+- `def _free_ring_label(parent_smiles)`
+- `def _replacement_token(parent_smiles, rule)` - *Return the replacement, renumbering its ring labels away from the parent's labels.*
+- `def _target_variants(motif)` - *Yield the motif with any ring labels relabelled, so a literal motif matches equivalent ring numbering.*
+- `def _safe_match(smiles, rule)` - *Find the first motif occurrence that can be replaced without splitting a ring context.*
 - `def generate_bioisosteres(parent_id, smiles, mw, logp, tpsa, hbd, hba, rotb, pka)` - *Apply rule-based bioisosteric transformations to generate virtual lead analogs.*
-- `def render_bioisostere_report(analogs, parent_id)` - *Render comprehensive bioisostere generation and optimization markdown report.*
+- `def render_bioisostere_report(analogs, parent_id)` - *Render a bioisostere generation and optimization Markdown report.*
 - `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
 - `def run_bioisostere_pipeline(compounds_path, target_parent_id)` - *Load parent compound and generate bioisosteric analogs across all rules.*
 - `def build_parser()`
@@ -173,7 +183,7 @@
 ### [`pnn/dynamics.py`](pnn/dynamics.py)
 > *Molecular Dynamics (MD) trajectory and contact stability analyzer for PNN.*
 
-**Size**: `548` lines (`23591` bytes)
+**Size**: `586` lines (`25668` bytes)
 
 **Classes:**
 - `class DynamicsError` - *Raised when MD trajectory data or parameters are malformed.*
@@ -183,12 +193,15 @@
   - Method `.as_row()`
 
 **Functions:**
-- `def _calc_stats(values)` - *Calculate mean, standard deviation, and maximum of a sequence of floats.*
-- `def load_trajectory_csv(path)` - *Load MD trajectory snapshots from a CSV file.*
-- `def analyze_trajectory(points, compound_id, target_id)` - *Analyze molecular dynamics trajectory frames to determine binding stability.*
+- `def _fmt(value, spec)`
+- `def _display(value, spec)`
+- `def _calc_stats(values)` - *Calculate mean, standard deviation, and maximum of the supplied (non-None) values.*
+- `def _parse_optional_float(raw, label, row_idx)`
+- `def load_trajectory_csv(path)` - *Load MD trajectory snapshots from a CSV file; absent optional columns stay unmeasured.*
+- `def analyze_trajectory(points, compound_id, target_id)` - *Analyze MD frames; metrics absent from the input stay unmeasured and block a stability verdict.*
 - `def generate_trajectory_svg(analysis, points, width, height)` - *Generate a clean SVG chart displaying MD trajectory RMSD over simulation time.*
-- `def render_trajectory_report(analysis)` - *Render a comprehensive Markdown report documenting the MD trajectory stability analysis.*
-- `def run_dynamics_pipeline(trajectory_path, compound_id, target_id, out_dir)` - *Execute complete MD trajectory stability workflow, optionally generating reports and charts.*
+- `def render_trajectory_report(analysis)` - *Render a Markdown report documenting the MD trajectory stability analysis.*
+- `def run_dynamics_pipeline(trajectory_path, compound_id, target_id, out_dir)` - *Execute the MD trajectory stability workflow, optionally writing reports and charts.*
 - `def build_parser()`
 - `def main(argv)`
 
@@ -197,7 +210,7 @@
 ### [`pnn/ind.py`](pnn/ind.py)
 > *Allometric human clinical dose projection and IND regulatory dossier compiler for PNN.*
 
-**Size**: `404` lines (`17207` bytes)
+**Size**: `602` lines (`25653` bytes)
 
 **Classes:**
 - `class IndError` - *Raised when clinical projection inputs violate regulatory or pharmacological contracts.*
@@ -205,12 +218,16 @@
   - Method `.as_row()`
 
 **Functions:**
-- `def calculate_allometric_scaling(animal_dose_mg_kg, mouse_cl_l_h_kg, mouse_vd_l_kg, noael_multiple, mouse_weight_kg, human_weight_kg, km_mouse, km_human)` - *Compute FDA / ICH allometric scaling parameters from mouse PK to human.*
-- `def project_clinical_candidates(compounds, preclinical_data, default_animal_dose)` - *Calculate clinical dose projections for all nominated candidates.*
-- `def render_ind_dossier(projections)` - *Render executive regulatory IND nomination dossier in Markdown format.*
-- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
-- `def load_candidate_records(compounds_path, candidates_path)` - *Load candidate compound records and preclinical exposures for allometric scaling.*
-- `def compile_ind_dossier(lead_id, compounds_path, candidates_path)` - *Compile human clinical dose projections and IND regulatory dossier for the candidate library.*
+- `def _fmt(value, spec)`
+- `def _display(value, spec)`
+- `def calculate_allometric_scaling(animal_dose_mg_kg, mouse_cl_l_h_kg, mouse_vd_l_kg, noael_mg_kg, noael_km, mouse_weight_kg, human_weight_kg, km_human, safety_factor)` - *Compute FDA / ICH allometric scaling parameters from measured mouse PK and NOAEL data.*
+- `def _project_one(cid, name, info, safety_factor, human_weight_kg)`
+- `def project_clinical_candidates(compounds, preclinical_data, lead_id, safety_factor, human_weight_kg)` - *Calculate clinical dose projections from measured preclinical data only.*
+- `def render_ind_dossier(projections, lead_id, criteria)` - *Render an IND nomination dossier; absent values are shown as UNMEASURED, never filled in.*
+- `def _parse_opt_float(val)` - *Parse an optional numeric float string, returning None for empty or non-numeric cells.*
+- `def _as_paths(compounds_path)`
+- `def load_candidate_records(compounds_path, candidates_path, tox_path)` - *Load compound records and measured preclinical exposures for allometric scaling.*
+- `def compile_ind_dossier(lead_id, compounds_path, candidates_path, tox_path, extra_pk)` - *Compile human dose projections and the IND dossier from measured inputs only.*
 - `def build_parser()`
 - `def main(argv)`
 
@@ -241,7 +258,7 @@
 ### [`pnn/pathway.py`](pnn/pathway.py)
 > *Hypothalamic circuit, perineuronal net turnover, and dosing dynamics simulator for PNN.*
 
-**Size**: `402` lines (`16244` bytes)
+**Size**: `422` lines (`17610` bytes)
 
 **Classes:**
 - `class PathwayError` - *Raised when simulation parameters are physically invalid or malformed.*
@@ -252,7 +269,7 @@
 
 **Functions:**
 - `def _get_dosing_times(regimen, duration_h)` - *Return schedule of dose administration times in hours.*
-- `def simulate_circuit_dynamics(compound_id, dose_mg_kg, regimen, duration_days, dt_h, half_life_h, cmax_per_dose, ec50_nm, mw)` - *Run continuous Runge-Kutta numerical integration of hypothalamic circuit dynamics.*
+- `def simulate_circuit_dynamics(compound_id, dose_mg_kg, regimen, duration_days, dt_h, half_life_h, cmax_per_dose, ec50_nm, mw)` - *Run an explicit forward-Euler integration of hypothalamic circuit dynamics.*
 - `def render_pathway_report(summary, sample_points)` - *Render comprehensive markdown simulation report for dosing regimen.*
 - `def build_parser()`
 - `def main(argv)`
@@ -359,15 +376,46 @@
 ### [`pnn/runner.py`](pnn/runner.py)
 > *One-click turnkey discovery pipeline runner for PNN.*
 
-**Size**: `336` lines (`13794` bytes)
+**Size**: `430` lines (`17877` bytes)
 
 **Classes:**
 - `class RunnerError` - *Raised when one-click pipeline runner cannot execute or find input data.*
 - `class RunSummary`
 
 **Functions:**
-- `def execute_turnkey_pipeline(vendor_csv, repurposing_csv, docking_csv, degradation_csv, permeability_csv, cytotoxicity_csv, pk_csv, pd_csv, out_dir, min_tier, emit_root)` - *Execute complete end-to-end PNN discovery workflow from libraries to interactive studio.*
+- `def execute_turnkey_pipeline(vendor_csv, repurposing_csv, docking_csv, degradation_csv, permeability_csv, cytotoxicity_csv, pk_csv, pd_csv, out_dir, min_tier, emit_root, tox_csv, safety_pharm_csv)` - *Execute complete end-to-end PNN discovery workflow from libraries to interactive studio.*
 - `def print_run_banner(summary)` - *Print terminal summary banner for turnkey runner.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
+### [`pnn/safety.py`](pnn/safety.py)
+> *IND-enabling safety pharmacology and repeat-dose toxicology assessment for PNN.*
+
+**Size**: `644` lines (`26843` bytes)
+
+**Classes:**
+- `class SafetyError` - *Raised when safety pharmacology or toxicology data is malformed or violates contract.*
+- `class ToxStudy`
+- `class SafetyPharm`
+- `class SafetyAssessment`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _normalize(name)`
+- `def _species_key(species)`
+- `def _parse_required_float(value, field_name, row_id)`
+- `def _parse_optional_float(value, field_name, row_id)`
+- `def _parse_optional_bool(value, field_name, row_id)`
+- `def _check_percent(value, field_name, row_id)`
+- `def load_tox_studies(path)` - *Ingest repeat-dose toxicology studies with NOAEL/LOAEL and target-organ findings.*
+- `def load_safety_pharmacology(path)` - *Ingest ICH S7A/S7B safety pharmacology and genotoxicity panel results.*
+- `def noael_hed_mg_kg(noael_mg_kg, species, human_km)` - *Convert a species NOAEL to a human equivalent dose using its body-surface-area factor.*
+- `def most_sensitive_study(studies)` - *Return the study with the lowest NOAEL human equivalent dose.*
+- `def _genotoxicity(safety_pharm)`
+- `def assess_safety(tox_studies, safety_pharm, safety_factor, herg_margin_min, herg_margin_fail, cyp_inhibition_max_pct, cyp_inhibition_caution_pct, human_weight_kg)` - *Assess each compound against IND-enabling toxicology and safety pharmacology criteria.*
+- `def render_safety_report(assessments, criteria)` - *Render a Markdown IND-enabling safety package summary.*
 - `def build_parser()`
 - `def main(argv)`
 
@@ -530,11 +578,15 @@
 ### [`tests/test_bioisostere.py`](tests/test_bioisostere.py)
 > *Unit tests for bioisosteric replacement and metabolic soft-spot optimizer.*
 
-**Size**: `96` lines (`3173` bytes)
+**Size**: `150` lines (`5365` bytes)
 
 **Classes:**
 - `class TestBioisostere`
   - Method `.test_generate_bioisosteres()`
+  - Method `.test_ring_label_parser_ignores_isotope_brackets()`
+  - Method `.test_replacement_does_not_split_ring_context()`
+  - Method `.test_property_deltas_match_rule_table()`
+  - Method `.test_cyclopropyl_delta_is_not_a_rotatable_increase()`
   - Method `.test_run_bioisostere_pipeline_missing_file_raises()`
   - Method `.test_run_bioisostere_pipeline_vendor_lib()`
   - Method `.test_render_bioisostere_report()`
@@ -629,7 +681,7 @@
 ### [`tests/test_dynamics.py`](tests/test_dynamics.py)
 > *Unit tests for MD trajectory and contact stability analyzer.*
 
-**Size**: `112` lines (`4521` bytes)
+**Size**: `145` lines (`6268` bytes)
 
 **Classes:**
 - `class TestDynamics`
@@ -640,6 +692,8 @@
   - Method `.test_generate_trajectory_svg()`
   - Method `.test_render_trajectory_report()`
   - Method `.test_run_dynamics_pipeline_and_cli()`
+  - Method `.test_missing_optional_columns_produce_insufficient_evidence()`
+  - Method `.test_partial_evidence_keeps_verdict_but_flags_gaps()`
 
 ---
 
@@ -657,14 +711,20 @@
 ### [`tests/test_ind.py`](tests/test_ind.py)
 > *Unit tests for human allometric dose projection and IND regulatory dossier generator.*
 
-**Size**: `104` lines (`3753` bytes)
+**Size**: `216` lines (`8715` bytes)
 
 **Classes:**
 - `class TestIndProjection`
   - Method `.test_calculate_allometric_scaling()`
-  - Method `.test_project_clinical_candidates()`
-  - Method `.test_load_candidate_records_missing_file_raises()`
-  - Method `.test_compile_ind_dossier_and_render()`
+  - Method `.test_allometric_scaling_rejects_missing_measurements()`
+  - Method `.test_project_clinical_candidates_with_complete_evidence()`
+  - Method `.test_missing_evidence_is_never_invented()`
+  - Method `.test_lead_is_nominated_first()`
+  - Method `.test_dossier_marks_unmeasured_and_omits_claims()`
+  - Method `.test_load_candidate_records_ignores_pk_timecourse_without_measurements()`
+  - Method `.test_tox_path_supplies_most_sensitive_noael()`
+  - Method `.test_compile_ind_dossier_uses_measured_candidates()`
+- `class TestIndCli`
   - Method `.test_ind_cli()`
 
 ---
@@ -689,7 +749,7 @@
 ### [`tests/test_pathway.py`](tests/test_pathway.py)
 > *Unit tests for hypothalamic circuit dynamics and dosing simulator.*
 
-**Size**: `111` lines (`3944` bytes)
+**Size**: `141` lines (`5217` bytes)
 
 **Classes:**
 - `class TestPathwaySimulator`
@@ -697,6 +757,8 @@
   - Method `.test_simulate_circuit_dynamics_continuous()`
   - Method `.test_regimen_variations()`
   - Method `.test_invalid_parameters_raise()`
+  - Method `.test_untreated_baseline_has_no_restoration_or_weight_loss()`
+  - Method `.test_continuous_regimen_is_flagged_for_plasticity_risk()`
   - Method `.test_render_pathway_report()`
   - Method `.test_pathway_cli()`
 
@@ -798,7 +860,7 @@
 ---
 
 ### [`tests/test_run.py`](tests/test_run.py)
-**Size**: `87` lines (`3566` bytes)
+**Size**: `116` lines (`5398` bytes)
 
 **Classes:**
 - `class TestTurnkeyRunner`
@@ -806,6 +868,46 @@
   - Method `.test_execute_turnkey_pipeline_success()`
   - Method `.test_runner_cli_execution_no_browser()`
   - Method `.test_runner_cli_execution_auto_opens_browser(mock_open)`
+
+---
+
+### [`tests/test_safety.py`](tests/test_safety.py)
+> *Unit tests for the IND-enabling safety pharmacology and toxicology package.*
+
+**Size**: `301` lines (`13158` bytes)
+
+**Classes:**
+- `class TestSafetyIngestion`
+  - Method `.test_missing_tox_file_raises()`
+  - Method `.test_missing_tox_columns_raises()`
+  - Method `.test_unknown_species_raises()`
+  - Method `.test_non_positive_noael_raises()`
+  - Method `.test_loael_below_noael_raises()`
+  - Method `.test_invalid_duration_raises()`
+  - Method `.test_load_valid_tox_rows()`
+  - Method `.test_pharm_duplicate_compound_raises()`
+  - Method `.test_pharm_invalid_boolean_raises()`
+  - Method `.test_pharm_percent_out_of_range_raises()`
+  - Method `.test_pharm_missing_compound_id_raises()`
+- `class TestSafetyAssessment`
+  - Method `._safe_pharm(compound_id)`
+  - Method `._tox(compound_id)`
+  - Method `.test_safe_compound_projection_and_status()`
+  - Method `.test_most_sensitive_species_is_selected_by_hed_not_raw_noael()`
+  - Method `.test_dog_wins_when_its_hed_is_lower()`
+  - Method `.test_most_sensitive_study_helper_ranks_on_hed()`
+  - Method `.test_missing_tox_study_is_caution()`
+  - Method `.test_missing_safety_pharmacology_is_caution()`
+  - Method `.test_positive_genotoxicity_fails()`
+  - Method `.test_narrow_herg_margin_fails()`
+  - Method `.test_cyp3a4_ceiling_fails()`
+  - Method `.test_marginal_herg_and_cyp_are_caution()`
+  - Method `.test_invalid_thresholds_raise()`
+  - Method `.test_report_includes_matrix_and_limits()`
+- `class TestSafetyCli`
+  - Method `.test_cli_requires_an_input()`
+  - Method `.test_cli_missing_file_returns_error()`
+  - Method `.test_cli_writes_csv_json_and_report()`
 
 ---
 

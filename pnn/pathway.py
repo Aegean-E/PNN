@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .reports import write_csv, write_json, write_text
 
@@ -137,7 +136,7 @@ def simulate_circuit_dynamics(
     mw: float = 349.46,
 ) -> Tuple[List[SimulationPoint], RegimenSummary]:
     """
-    Run continuous Runge-Kutta numerical integration of hypothalamic circuit dynamics.
+    Run an explicit forward-Euler integration of hypothalamic circuit dynamics.
     Models drug absorption/elimination, PNN turnover, insulin receptor accessibility,
     downstream AKT phosphorylation, and body weight progression.
     """
@@ -147,13 +146,17 @@ def simulate_circuit_dynamics(
         raise PathwayError(f"Duration must be between 1 and 90 days, got {duration_days}")
     if dt_h <= 0 or dt_h > 2.0:
         raise PathwayError(f"Step dt must be between 0.01 and 2.0 hours, got {dt_h}")
+    if half_life_h <= 0:
+        raise PathwayError(f"Half-life must be > 0 h, got {half_life_h}")
+    if cmax_per_dose <= 0 or ec50_nm <= 0 or mw <= 0:
+        raise PathwayError("cmax_per_dose, ec50_nm and mw must all be > 0")
 
     duration_h = duration_days * 24.0
     dose_times = set(_get_dosing_times(regimen, duration_h))
 
     # Biological constants
     # ke elimination rate constant
-    ke = math.log(2.0) / max(0.5, half_life_h)
+    ke = math.log(2.0) / half_life_h
     ka = 1.2  # absorption rate constant (h^-1)
     # Convert ec50 from nM to ng/mL: ng/mL = nM * MW / 1000
     ec50_ng_ml = max(1.0, ec50_nm * mw / 1000.0)
@@ -162,16 +165,19 @@ def simulate_circuit_dynamics(
     k_synth = 0.012  # endogenous turnover: recovery half-life ~58h
     k_deg_max = 0.085  # maximum enzymatic / competitive degradation rate (h^-1)
 
-    # Signaling & weight constants
+    # Signaling & weight constants. AKT is homeostatic around the DIO baseline, so an untreated
+    # animal reports zero restoration rather than drifting to the model's own equilibrium.
     k_akt = 0.15
     k_akt_decay = 0.12
+    akt_baseline = 0.25
+    ir_baseline = max(0.1, 1.0 - (0.75 * 1.0))
 
     # State variables
-    # c_depot (unabsorbed oral dose in GI), c_brain, pnn (1.0 = 100% baseline), akt (0.25 = basal resistant level)
+    # c_depot (unabsorbed oral dose in GI), c_brain, pnn (1.0 = 100% baseline), akt (relative to max)
     c_depot = 0.0
     c_brain = 0.0
     pnn = 1.0  # normalized density: 1.0 = baseline hypertrophic PNN
-    akt = 0.25  # baseline blunted insulin signaling in DIO
+    akt = akt_baseline
     weight_delta = 0.0
 
     points: List[SimulationPoint] = []
@@ -204,8 +210,8 @@ def simulate_circuit_dynamics(
         # IR accessibility is inverse of PNN density: A = 1.0 - 0.7 * pnn
         ir_access = max(0.1, 1.0 - (0.75 * pnn))
 
-        # AKT activation driven by accessibility:
-        d_akt = k_akt * ir_access - k_akt_decay * akt
+        # AKT activation is driven by the gain in receptor accessibility over the DIO baseline.
+        d_akt = (k_akt * (ir_access - ir_baseline)) - (k_akt_decay * (akt - akt_baseline))
 
         # Integration step (Euler-Heun predictor)
         c_depot = max(0.0, c_depot + d_depot * dt_h)
@@ -218,7 +224,7 @@ def simulate_circuit_dynamics(
         ir_access_pct = ir_access * 100.0
         akt_pct = akt * 100.0
         # Food intake reduction proportional to AKT signaling restoration (0 to 35%)
-        food_red_pct = max(0.0, min(40.0, (akt - 0.25) * 50.0))
+        food_red_pct = max(0.0, min(40.0, (akt - akt_baseline) * 50.0))
         # Daily weight delta integration (1% weight loss per ~3 days of 25% food intake reduction)
         d_weight_day = -(food_red_pct / 25.0) * (1.0 / 3.0)  # % weight delta per day
         weight_delta += d_weight_day * (dt_h / 24.0)
@@ -253,19 +259,23 @@ def simulate_circuit_dynamics(
     mean_pnn = sum(pnn_values) / len(pnn_values)
     mean_pnn_red = max(0.0, 100.0 - mean_pnn)
     peak_pnn_red = max(0.0, 100.0 - min(pnn_values))
-    mean_akt = sum(akt_values) / len(akt_values)
+    mean_akt_level = sum(akt_values) / len(akt_values)
+    # Restoration is relative to the DIO baseline, not the absolute pAKT level.
+    mean_akt_restoration = max(0.0, min(100.0, ((mean_akt_level / 100.0) - akt_baseline) / (1.0 - akt_baseline) * 100.0))
 
     # Plasticity Safety Score (100 = optimal therapeutic window, penalizes prolonged <20% PNN)
     plasticity_penalty = min(80.0, (severe_plasticity_hours / 24.0) * 15.0)
     safety_score = max(10.0, 100.0 - plasticity_penalty)
 
-    # Recommendation verdict
-    if safety_score >= 80.0 and mean_pnn_red >= 20.0:
-        verdict = "RECOMMENDED: Balanced metabolic reversal with physiological plasticity preservation."
-    elif mean_pnn_red < 15.0:
+    # Recommendation verdict is derived entirely from the computed metrics.
+    if mean_pnn_red < 15.0:
         verdict = "SUB-THERAPEUTIC: Insufficient PNN digestion; consider increasing dose or frequency."
+    elif safety_score < 80.0 or mean_pnn_red < 20.0:
+        verdict = "CAUTION: Prolonged deep PNN depletion; reduce exposure or extend the dosing interval."
+    elif mean_akt_restoration < 40.0:
+        verdict = "CAUTION: PNN reduction outweighs insulin signaling recovery; verify the downstream coupling."
     else:
-        verdict = "CAUTION: Prolonged deep PNN depletion; transition to intermittent pulsatile dosing."
+        verdict = "RECOMMENDED: Balanced metabolic reversal with physiological plasticity preservation."
 
     summary = RegimenSummary(
         regimen_name=regimen,
@@ -274,7 +284,7 @@ def simulate_circuit_dynamics(
         duration_days=duration_days,
         mean_pnn_reduction_pct=mean_pnn_red,
         peak_pnn_reduction_pct=peak_pnn_red,
-        mean_akt_restoration_pct=mean_akt,
+        mean_akt_restoration_pct=mean_akt_restoration,
         projected_weight_loss_pct=abs(weight_delta),
         plasticity_safety_score=safety_score,
         recommendation=verdict,
@@ -293,7 +303,7 @@ def render_pathway_report(summary: RegimenSummary, sample_points: Sequence[Simul
         f"- **Compound ID**: `{summary.compound_id}`",
         f"- **Simulated Regimen**: **{summary.regimen_name}** ({summary.dose_mg_kg} mg/kg PO for {summary.duration_days} days)",
         f"- **Mean Hypothalamic PNN Reduction**: **{summary.mean_pnn_reduction_pct:.1f}%** (Peak: {summary.peak_pnn_reduction_pct:.1f}%)",
-        f"- **Insulin Signaling (pAKT) Restoration**: **{summary.mean_akt_restoration_pct:.1f}%** of physiological maximum",
+        f"- **Insulin Signaling (pAKT) Restoration**: **{summary.mean_akt_restoration_pct:.1f}%** of the recoverable gap above the DIO baseline",
         f"- **Projected Cumulative Weight Loss**: **{summary.projected_weight_loss_pct:.1f}%**",
         f"- **Plasticity Safety Score**: **{summary.plasticity_safety_score:.1f} / 100**",
         f"- **Clinical Recommendation**: *{summary.recommendation}*",
@@ -304,6 +314,8 @@ def render_pathway_report(summary: RegimenSummary, sample_points: Sequence[Simul
         "> **Plasticity Risk Mitigation (ADR-008)**: Hypothalamic perineuronal nets maintain structural synaptic stability. "
         "Continuous unremitting degradation (<20% baseline density) risks anomalous synaptic remodeling. Intermittent "
         "pulsatile dosing allows periodic net stabilization while sustaining POMC insulin receptor accessibility.",
+        "> This report models a single regimen. The recommendation is derived from that regimen's computed metrics, "
+        "not from a cross-regimen comparison.",
         "",
         "## Simulated Circuit Trajectory (Sampled Windows)",
         "",
@@ -320,15 +332,23 @@ def render_pathway_report(summary: RegimenSummary, sample_points: Sequence[Simul
                 f"*{pt.plasticity_risk_tier}* |"
             )
 
-    lines.extend([
-        "",
-        "## Regimen Comparison Insights",
-        "",
-        "1. **Continuous Daily (QD)**: Yields rapid weight reduction but produces extended nadirs in PNN density (<15%), lowering safety score.",
-        "2. **Intermittent Pulsatile (Q2D / Twice-Weekly)**: Restores POMC insulin signaling during feeding windows while allowing partial net consolidation during trough intervals.",
-        "3. **Translational Conclusion**: Intermittent pulsatile dosing presents the optimal therapeutic index for clinical candidate advancement.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Interpretation",
+            "",
+            f"- **PNN effect**: mean reduction of {summary.mean_pnn_reduction_pct:.1f}% with a peak of "
+            f"{summary.peak_pnn_reduction_pct:.1f}%.",
+            f"- **Signaling effect**: {summary.mean_akt_restoration_pct:.1f}% of the recoverable pAKT gap was restored "
+            "above the untreated DIO baseline.",
+            f"- **Plasticity margin**: {summary.plasticity_safety_score:.1f}/100, penalised for hours spent below 20% "
+            "PNN density.",
+            "- **Model limits**: this is a deterministic ODE abstraction with literature-derived constants. It ranks "
+            "dosing hypotheses; it does not predict efficacy, safety or human exposure, and it must not be reported "
+            "as measured pharmacology (G-001).",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
