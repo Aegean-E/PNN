@@ -43,8 +43,10 @@ PNN/
 │   ├── bbb_penetration_rules.md   <- BBB penetration guidelines
 │   └── oral_bioavailability.md    <- Oral drug design principles
 ├── computational/                 <- Computational approaches
+│   ├── bioisostere_optimization.md  <- Medicinal chemistry rules and metabolic soft spots
 │   ├── docking_protocols.md       <- Molecular docking procedures
 │   ├── docking_ranking.md         <- Docking consensus contract and normalization
+│   ├── dynamics_analysis.md       <- MD trajectory stability and contact persistence analysis
 │   ├── lead_selection.md          <- End-to-end lead selection workflow and manifest
 │   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
 │   ├── mpo_optimization.md        <- Phase 5 MPO and composite desirability
@@ -55,6 +57,8 @@ PNN/
 │   ├── assay_pipeline.md          <- Phase 3 in vitro assay qualification and hit criteria
 │   ├── experimental_protocols.md  <- In vitro/in vivo assay protocols
 │   └── preclinical_pipeline.md    <- Phase 4 in vivo PK/PD and candidate qualification
+├── translational/                 <- Clinical translation and regulatory filing
+│   └── ind_filing.md              <- Human allometric scaling and IND dossier design
 ├── data/                          <- Data storage
 │   ├── compounds/                 <- Compound libraries
 │   │   ├── repurposing_library.csv  <- Annotated CNS repurposing library
@@ -63,6 +67,8 @@ PNN/
 │   ├── docking/                   <- Docking results
 │   │   ├── multi_target_scores.csv  <- Multi-target docking scoring dataset
 │   │   └── scores_template.csv    <- Input header for the consensus ranker
+│   ├── dynamics/                  <- Molecular dynamics trajectory time series
+│   │   └── ptpsigma_md_trajectory_template.csv  <- PTPsigma MD trajectory template
 │   ├── assays/                    <- Assay results and templates
 │   │   ├── cytotoxicity_template.csv  <- CellTiter-Glo counter-screen template
 │   │   ├── degradation_template.csv  <- Fluorogenic DQ-CS cleavage template
@@ -78,12 +84,16 @@ PNN/
 │   ├── __init__.py                <- Public API
 │   ├── __main__.py                <- `python -m pnn` entry point
 │   ├── assay.py                   <- Phase 3 in vitro assay ingestion and hit qualification
+│   ├── bioisostere.py             <- Bioisosteric replacement and metabolic soft-spot engine
 │   ├── cli.py                     <- Screening command contract
 │   ├── compounds.py               <- Compound record and CSV ingestion
 │   ├── curate.py                  <- `python -m pnn.curate` library command
 │   ├── curation.py                <- Merge, dedupe and property-space caps
 │   ├── docking.py                 <- Docking ingestion and consensus normalization
+│   ├── dynamics.py                <- MD trajectory and contact stability analyzer
+│   ├── ind.py                     <- Allometric human dose projection and IND dossier
 │   ├── mpo.py                     <- Phase 5 CNS MPO and candidate profiling
+│   ├── pathway.py                 <- Hypothalamic circuit dynamics and dosing simulator
 │   ├── pipeline.py                <- `python -m pnn.pipeline` lead selection CLI
 │   ├── preclinical.py             <- Phase 4 in vivo PK/PD NCA analysis and candidate selection
 │   ├── rank.py                    <- `python -m pnn.rank` shortlist command
@@ -97,16 +107,21 @@ PNN/
 │   ├── tables.py                  <- Shared tabular CSV row contracts
 │   └── target.py                  <- Receptor profiles and AutoDock Vina grid generation
 ├── tools/                         <- Golden runs and automation tools
-│   └── golden_run.py              <- Golden reference run and manifest verification
+│   ├── golden_run.py              <- Golden reference run and manifest verification
+│   └── update_readme_tree.py      <- Helper script to sync README directory tree
 └── tests/                         <- Regression shield (docs and pipeline behaviour)
     ├── __init__.py                <- Makes the test package importable
     ├── test_assay.py              <- In vitro assay qualification and hit criteria
+    ├── test_bioisostere.py        <- Bioisosteric replacement and soft-spot tests
     ├── test_cli.py                <- Screening command contract
     ├── test_curation.py           <- Merge, dedupe, bins and CLI contract
     ├── test_docking.py            <- Docking ingestion and normalization
     ├── test_docs.py               <- Required docs and README tree paths
+    ├── test_dynamics.py           <- MD trajectory and contact stability tests
     ├── test_golden.py             <- Golden reference pipeline verification
+    ├── test_ind.py                <- Human dose projection and IND dossier tests
     ├── test_mpo.py                <- Phase 5 MPO profiling tests
+    ├── test_pathway.py            <- Hypothalamic circuit dynamics tests
     ├── test_pipeline.py           <- End-to-end pipeline and manifest tests
     ├── test_preclinical.py        <- In vivo PK/PD NCA analysis and candidate selection tests
     ├── test_rank.py               <- Consensus shortlist and CLI contract

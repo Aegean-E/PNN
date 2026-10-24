@@ -18,6 +18,24 @@ from .assay import (
     qualify_leads,
     render_assay_report,
 )
+from .bioisostere import (
+    ANALOG_FIELDS,
+    render_bioisostere_report,
+    run_bioisostere_pipeline,
+)
+from .dynamics import (
+    DYNAMICS_SUMMARY_FIELDS,
+    run_dynamics_pipeline,
+)
+from .ind import (
+    DOSE_PROJECTION_FIELDS,
+    compile_ind_dossier,
+)
+from .pathway import (
+    SIMULATION_FIELDS,
+    render_pathway_report,
+    simulate_circuit_dynamics,
+)
 from .preclinical import (
     PRECLINICAL_FIELDS,
     evaluate_candidates,
@@ -58,6 +76,7 @@ class RunSummary:
     elapsed_seconds: float
     output_dir: Path
     studio_html_path: Path
+    analogs_count: int = 0
 
 
 def execute_turnkey_pipeline(
@@ -181,6 +200,42 @@ def execute_turnkey_pipeline(
         root_studio = Path("studio.html")
         write_text(root_studio, html_out)
 
+    # 6. Advanced Translational Capabilities (IND Dossier, Bioisosteres, Pathway ODE, MD Dynamics)
+    lead_id = candidates[0].compound_id if candidates else "PNN-101"
+    analogs_count = 0
+    try:
+        analogs = run_bioisostere_pipeline(vendor_csv, target_parent_id=lead_id)
+        if analogs:
+            analogs_count = len(analogs)
+            write_csv(out_dir / "bioisosteric_analogs.csv", ANALOG_FIELDS, [a.as_row() for a in analogs])
+            write_text(out_dir / "bioisostere_report.md", render_bioisostere_report(analogs, lead_id))
+    except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+        analogs_count = 0
+
+    if pk_csv and pk_csv.is_file():
+        try:
+            projections, dossier_md = compile_ind_dossier(lead_id, compounds_path=vendor_csv, candidates_path=pk_csv)
+            write_text(out_dir / "ind_dossier.md", dossier_md)
+            write_csv(out_dir / "human_dose_projections.csv", DOSE_PROJECTION_FIELDS, [p.as_row() for p in projections])
+        except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+            pass
+
+    try:
+        p_points, p_summary = simulate_circuit_dynamics(
+            compound_id=lead_id, dose_mg_kg=10.0, regimen="INTERMITTENT_PULSATILE", duration_days=14
+        )
+        write_csv(out_dir / "pathway_simulation.csv", SIMULATION_FIELDS, [p.as_row() for p in p_points])
+        write_text(out_dir / "pathway_report.md", render_pathway_report(p_summary, p_points))
+    except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+        pass
+
+    traj_template = Path("data/dynamics/ptpsigma_md_trajectory_template.csv")
+    if traj_template.is_file():
+        try:
+            run_dynamics_pipeline(traj_template, compound_id=lead_id, target_id="PTPsigma", out_dir=out_dir)
+        except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
+            pass
+
     elapsed = time.perf_counter() - start_time
     clinical_count = sum(1 for c in candidates if c.status == "CLINICAL_CANDIDATE")
     confirmed_hit_count = sum(1 for h in qualified if h.status in ("CONFIRMED_HIT", "QUALIFIED_LEAD"))
@@ -195,6 +250,7 @@ def execute_turnkey_pipeline(
         elapsed_seconds=elapsed,
         output_dir=out_dir,
         studio_html_path=studio_html,
+        analogs_count=analogs_count,
     )
 
 
@@ -209,6 +265,8 @@ def print_run_banner(summary: RunSummary) -> None:
     print(f"  * Confirmed In Vitro Hits:   {summary.qualified_hits_count}")
     print(f"  * Preclinical Candidates:    {summary.preclinical_candidates_count}")
     print(f"  * Bemis-Murcko Scaffolds:    {summary.scaffolds_count}")
+    if summary.analogs_count > 0:
+        print(f"  * Bioisosteric Analogs:      {summary.analogs_count}")
     print(f"  * Execution Time:            {summary.elapsed_seconds:.2f} seconds")
     print(f"  * Output Directory:          {summary.output_dir}")
     print(f"  * Interactive Dashboard:     {summary.studio_html_path.resolve()}")

@@ -1,68 +1,15 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-browser-ui-auto-open",
+    "task_id": "pnn-advanced-translational-platform-v1",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792859517.8001437,
-    "completed_at": 1792859523.5337894
+    "updated_at": 1792861684.3051913,
+    "owner": "unidentified",
+    "completed_at": 1792861687.8335142
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-phase2-docking-ranker",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/5] Verification: 52 tests pass; rank and screen help under 200ms; PNN gates 4/4; checklists: passed.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792698121.640339,
-      "timestamp_str": "2026-10-22 22:42:01"
-    },
-    {
-      "task_id": "pnn-phase2-docking-ranker",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-phase2-docking-ranker' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792698138.055962,
-      "timestamp_str": "2026-10-22 22:42:18"
-    },
-    {
-      "task_id": "pnn-phase2-curation",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Add a compound-library curation CLI: provenance-aware merge, ID/SMILES deduplication, tier filtering, property-space binning, caps, tests and docs.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792698249.7619548,
-      "timestamp_str": "2026-10-22 22:44:09",
-      "impact_assessment": {
-        "why": "Phase 2 needs a reproducible way to merge vendor and repurposing libraries into a defined 50K-200K screening set without duplicates or property-space clumps.",
-        "benefits": "Produces a traceable curated library from multiple sources and keeps the docking budget focused on diverse, tier-qualified compounds.",
-        "risks": "contract: new curated CSV schema; dependency: none, standard library only; concurrency: atomic report writes; state: no persisted state beyond generated reports.",
-        "mitigation": "Validate ID collisions, document exact-SMILES limits and binning semantics, expose every removal count in JSON, and cover merge, dedupe, filter and cap boundaries with tests."
-      }
-    },
-    {
-      "task_id": "pnn-phase2-curation",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/5] Verification: 66 tests pass; curate help under 200ms; PNN gates 4/4; checklists: passed.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792698884.4696686,
-      "timestamp_str": "2026-10-22 22:54:44"
-    },
-    {
-      "task_id": "pnn-phase2-curation",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-phase2-curation' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792698884.6412177,
-      "timestamp_str": "2026-10-22 22:54:44"
-    },
     {
       "task_id": "pnn-phase2-pipeline",
       "phase": "phase 2",
@@ -237,6 +184,64 @@
       "status": "completed",
       "timestamp": 1792859523.5337913,
       "timestamp_str": "2026-10-24 19:32:03"
+    },
+    {
+      "task_id": "pnn-advanced-translational-platform-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/6] Implement Hypothalamic Circuit & Dosing Dynamics Simulator (pnn/pathway.py)",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792860446.7041867,
+      "timestamp_str": "2026-10-24 19:47:26",
+      "impact_assessment": {
+        "why": "PNN requires complete translational capabilities: dosing dynamics to prevent synaptic plasticity side-effects, allometric human clinical dose projection for IND filing, automated bioisosteric optimization of leads, and molecular dynamics trajectory stability analysis.",
+        "benefits": "Enables intermittent pulsatile dosing regimens via systems pharmacology ODEs; computes human clinical starting dose and therapeutic index; generates metabolically shielded bioisosteric analogs; validates kinetic stability of docking poses via MD metrics.",
+        "risks": "contract: new simulation, IND, bioisostere, and trajectory schemas; dependency: none, Python standard library only; concurrency: atomic output writers; state: no persistent state beyond generated CSV, JSON, and Markdown reports.",
+        "mitigation": "Unit test coverage for mathematical ODEs, allometric scaling, SMILES transformations, and trajectory parsers; register ADR-008."
+      }
+    },
+    {
+      "task_id": "pnn-advanced-translational-platform-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 153 tests pass in 1.0s; 4/4 gates pass (test, hygiene, guidelines, secrets); ADR-008 recorded; checklists: passed",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792861635.483759,
+      "timestamp_str": "2026-10-24 20:07:15",
+      "agent": "unidentified"
+    },
+    {
+      "task_id": "pnn-advanced-translational-platform-v1",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-advanced-translational-platform-v1' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792861644.2817523,
+      "timestamp_str": "2026-10-24 20:07:24",
+      "agent": "unidentified"
+    },
+    {
+      "task_id": "pnn-advanced-translational-platform-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "checklists: passed. Delivered advanced translational platform: hypothalamic circuit ODE dosing simulator (pnn.pathway), human allometric IND projection and regulatory dossier compiler (pnn.ind), bioisostere generation and liability shielding (pnn.bioisostere), and MD trajectory stability analysis (pnn.dynamics). 153/153 tests pass, 4/4 gates pass.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792861684.3051913,
+      "timestamp_str": "2026-10-24 20:08:04",
+      "agent": "unidentified"
+    },
+    {
+      "task_id": "pnn-advanced-translational-platform-v1",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-advanced-translational-platform-v1' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792861687.833516,
+      "timestamp_str": "2026-10-24 20:08:07",
+      "agent": "unidentified"
     }
   ]
 }

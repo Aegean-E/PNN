@@ -6,11 +6,11 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `40`
-- **Total Classes**: `64`
-- **Total Top-Level Functions**: `147`
-- **Total Class Methods**: `158`
-- **Total Source Lines**: `7990`
+- **Total Python Modules**: `49`
+- **Total Classes**: `79`
+- **Total Top-Level Functions**: `175`
+- **Total Class Methods**: `187`
+- **Total Source Lines**: `10439`
 
 ---
 
@@ -19,7 +19,7 @@
 ### [`pnn/__init__.py`](pnn/__init__.py)
 > *Phase 2, Phase 3, Phase 4, and Phase 5 discovery and preclinical pipeline for PNN.*
 
-**Size**: `135` lines (`2938` bytes)
+**Size**: `202` lines (`4563` bytes)
 
 ---
 
@@ -50,6 +50,27 @@
 - `def load_cytotoxicity_data(path)` - *Ingest CellTiter-Glo cytotoxicity counter-screen CSV.*
 - `def qualify_leads(degradation, permeability, cytotoxicity, ec50_ceiling_nm, max_deg_floor_pct, pampa_pe_floor, mdck_efflux_ceiling, min_selectivity_index)` - *Qualify leads against Phase 3 in vitro degradation, permeability, and safety criteria.*
 - `def render_assay_report(hits, criteria)` - *Render a comprehensive Phase 3 in vitro qualification Markdown report.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
+### [`pnn/bioisostere.py`](pnn/bioisostere.py)
+> *Bioisosteric replacement and metabolic soft-spot optimization engine for PNN.*
+
+**Size**: `415` lines (`15348` bytes)
+
+**Classes:**
+- `class BioisostereError` - *Raised when compound SMILES or bioisosteric transformation rules are invalid.*
+- `class BioisostereRule`
+- `class GeneratedAnalog`
+  - Method `.as_row()`
+
+**Functions:**
+- `def generate_bioisosteres(parent_id, smiles, mw, logp, tpsa, hbd, hba, rotb, pka)` - *Apply rule-based bioisosteric transformations to generate virtual lead analogs.*
+- `def render_bioisostere_report(analogs, parent_id)` - *Render comprehensive bioisostere generation and optimization markdown report.*
+- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
+- `def run_bioisostere_pipeline(compounds_path, target_parent_id)` - *Load parent compound and generate bioisosteric analogs across all rules.*
 - `def build_parser()`
 - `def main(argv)`
 
@@ -149,6 +170,52 @@
 
 ---
 
+### [`pnn/dynamics.py`](pnn/dynamics.py)
+> *Molecular Dynamics (MD) trajectory and contact stability analyzer for PNN.*
+
+**Size**: `548` lines (`23591` bytes)
+
+**Classes:**
+- `class DynamicsError` - *Raised when MD trajectory data or parameters are malformed.*
+- `class TrajectoryPoint` - *A single snapshot / frame in an MD simulation trajectory.*
+- `class TrajectoryAnalysis` - *Comprehensive statistical and structural analysis of an MD trajectory.*
+  - Method `.as_dict()`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _calc_stats(values)` - *Calculate mean, standard deviation, and maximum of a sequence of floats.*
+- `def load_trajectory_csv(path)` - *Load MD trajectory snapshots from a CSV file.*
+- `def analyze_trajectory(points, compound_id, target_id)` - *Analyze molecular dynamics trajectory frames to determine binding stability.*
+- `def generate_trajectory_svg(analysis, points, width, height)` - *Generate a clean SVG chart displaying MD trajectory RMSD over simulation time.*
+- `def render_trajectory_report(analysis)` - *Render a comprehensive Markdown report documenting the MD trajectory stability analysis.*
+- `def run_dynamics_pipeline(trajectory_path, compound_id, target_id, out_dir)` - *Execute complete MD trajectory stability workflow, optionally generating reports and charts.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
+### [`pnn/ind.py`](pnn/ind.py)
+> *Allometric human clinical dose projection and IND regulatory dossier compiler for PNN.*
+
+**Size**: `404` lines (`17207` bytes)
+
+**Classes:**
+- `class IndError` - *Raised when clinical projection inputs violate regulatory or pharmacological contracts.*
+- `class HumanDoseProjection`
+  - Method `.as_row()`
+
+**Functions:**
+- `def calculate_allometric_scaling(animal_dose_mg_kg, mouse_cl_l_h_kg, mouse_vd_l_kg, noael_multiple, mouse_weight_kg, human_weight_kg, km_mouse, km_human)` - *Compute FDA / ICH allometric scaling parameters from mouse PK to human.*
+- `def project_clinical_candidates(compounds, preclinical_data, default_animal_dose)` - *Calculate clinical dose projections for all nominated candidates.*
+- `def render_ind_dossier(projections)` - *Render executive regulatory IND nomination dossier in Markdown format.*
+- `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
+- `def load_candidate_records(compounds_path, candidates_path)` - *Load candidate compound records and preclinical exposures for allometric scaling.*
+- `def compile_ind_dossier(lead_id, compounds_path, candidates_path)` - *Compile human clinical dose projections and IND regulatory dossier for the candidate library.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
 ### [`pnn/mpo.py`](pnn/mpo.py)
 > *Phase 5 Multiparametric Optimization (MPO) and candidate profiling engine for PNN.*
 
@@ -166,6 +233,27 @@
 - `def render_mpo_report(profiles)` - *Render comprehensive Phase 5 Lead Optimization & MPO Profiling markdown report.*
 - `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
 - `def run_mpo_analysis(compounds_path, candidates_path, assays_path)` - *Ingest datasets, compute MPO and composite desirability, and generate profiles.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
+### [`pnn/pathway.py`](pnn/pathway.py)
+> *Hypothalamic circuit, perineuronal net turnover, and dosing dynamics simulator for PNN.*
+
+**Size**: `402` lines (`16244` bytes)
+
+**Classes:**
+- `class PathwayError` - *Raised when simulation parameters are physically invalid or malformed.*
+- `class SimulationPoint`
+  - Method `.as_row()`
+- `class RegimenSummary`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _get_dosing_times(regimen, duration_h)` - *Return schedule of dose administration times in hours.*
+- `def simulate_circuit_dynamics(compound_id, dose_mg_kg, regimen, duration_days, dt_h, half_life_h, cmax_per_dose, ec50_nm, mw)` - *Run continuous Runge-Kutta numerical integration of hypothalamic circuit dynamics.*
+- `def render_pathway_report(summary, sample_points)` - *Render comprehensive markdown simulation report for dosing regimen.*
 - `def build_parser()`
 - `def main(argv)`
 
@@ -271,7 +359,7 @@
 ### [`pnn/runner.py`](pnn/runner.py)
 > *One-click turnkey discovery pipeline runner for PNN.*
 
-**Size**: `278` lines (`11242` bytes)
+**Size**: `336` lines (`13794` bytes)
 
 **Classes:**
 - `class RunnerError` - *Raised when one-click pipeline runner cannot execute or find input data.*
@@ -439,6 +527,21 @@
 
 ---
 
+### [`tests/test_bioisostere.py`](tests/test_bioisostere.py)
+> *Unit tests for bioisosteric replacement and metabolic soft-spot optimizer.*
+
+**Size**: `96` lines (`3173` bytes)
+
+**Classes:**
+- `class TestBioisostere`
+  - Method `.test_generate_bioisosteres()`
+  - Method `.test_run_bioisostere_pipeline_missing_file_raises()`
+  - Method `.test_run_bioisostere_pipeline_vendor_lib()`
+  - Method `.test_render_bioisostere_report()`
+  - Method `.test_bioisostere_cli()`
+
+---
+
 ### [`tests/test_cli.py`](tests/test_cli.py)
 > *Integration tests for the `python -m pnn` CLI contract.*
 
@@ -523,6 +626,23 @@
 
 ---
 
+### [`tests/test_dynamics.py`](tests/test_dynamics.py)
+> *Unit tests for MD trajectory and contact stability analyzer.*
+
+**Size**: `112` lines (`4521` bytes)
+
+**Classes:**
+- `class TestDynamics`
+  - Method `.test_load_trajectory_csv()`
+  - Method `.test_load_trajectory_missing_raises()`
+  - Method `.test_analyze_trajectory_stable()`
+  - Method `.test_analyze_trajectory_unstable_drift()`
+  - Method `.test_generate_trajectory_svg()`
+  - Method `.test_render_trajectory_report()`
+  - Method `.test_run_dynamics_pipeline_and_cli()`
+
+---
+
 ### [`tests/test_golden.py`](tests/test_golden.py)
 > *Integration test for the PNN Phase 2 golden reference run.*
 
@@ -531,6 +651,21 @@
 **Classes:**
 - `class GoldenRunTest`
   - Method `.test_golden_run_execution()`
+
+---
+
+### [`tests/test_ind.py`](tests/test_ind.py)
+> *Unit tests for human allometric dose projection and IND regulatory dossier generator.*
+
+**Size**: `104` lines (`3753` bytes)
+
+**Classes:**
+- `class TestIndProjection`
+  - Method `.test_calculate_allometric_scaling()`
+  - Method `.test_project_clinical_candidates()`
+  - Method `.test_load_candidate_records_missing_file_raises()`
+  - Method `.test_compile_ind_dossier_and_render()`
+  - Method `.test_ind_cli()`
 
 ---
 
@@ -548,6 +683,22 @@
   - Method `.test_run_mpo_analysis_valid()`
   - Method `.test_render_mpo_report()`
   - Method `.test_cli_execution_success()`
+
+---
+
+### [`tests/test_pathway.py`](tests/test_pathway.py)
+> *Unit tests for hypothalamic circuit dynamics and dosing simulator.*
+
+**Size**: `111` lines (`3944` bytes)
+
+**Classes:**
+- `class TestPathwaySimulator`
+  - Method `.test_simulate_circuit_dynamics_pulsatile()`
+  - Method `.test_simulate_circuit_dynamics_continuous()`
+  - Method `.test_regimen_variations()`
+  - Method `.test_invalid_parameters_raise()`
+  - Method `.test_render_pathway_report()`
+  - Method `.test_pathway_cli()`
 
 ---
 
@@ -758,5 +909,15 @@
 - `def _check_digest(path)`
 - `def execute_golden_run(out_dir)` - *Run Phase 2 pipeline & Phase 3 assay checks against reference benchmarks.*
 - `def main(argv)`
+
+---
+
+### [`tools/update_readme_tree.py`](tools/update_readme_tree.py)
+> *Update README directory tree with translational modules and tests.*
+
+**Size**: `132` lines (`9356` bytes)
+
+**Functions:**
+- `def update_tree()`
 
 ---
