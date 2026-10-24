@@ -6,11 +6,11 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `19`
-- **Total Classes**: `24`
-- **Total Top-Level Functions**: `73`
-- **Total Class Methods**: `80`
-- **Total Source Lines**: `2450`
+- **Total Python Modules**: `23`
+- **Total Classes**: `28`
+- **Total Top-Level Functions**: `88`
+- **Total Class Methods**: `92`
+- **Total Source Lines**: `3165`
 
 ---
 
@@ -19,7 +19,7 @@
 ### [`pnn/__init__.py`](pnn/__init__.py)
 > *Phase 2 CNS/BBB property screening for the PNN research project.*
 
-**Size**: `23` lines (`647` bytes)
+**Size**: `37` lines (`908` bytes)
 
 ---
 
@@ -33,11 +33,10 @@
 ### [`pnn/cli.py`](pnn/cli.py)
 > *Command-line entry point for the PNN Phase 2 screening pipeline.*
 
-**Size**: `140` lines (`4985` bytes)
+**Size**: `91` lines (`3406` bytes)
 
 **Functions:**
 - `def build_parser()`
-- `def _row(result)`
 - `def _filter(results, min_tier)`
 - `def _report(results, kept, source, out)`
 - `def _failure(what, why, fix)`
@@ -68,12 +67,11 @@
 ### [`pnn/curate.py`](pnn/curate.py)
 > *Command-line merge and diversity curation of PNN compound libraries.*
 
-**Size**: `163` lines (`5369` bytes)
+**Size**: `114` lines (`4217` bytes)
 
 **Functions:**
 - `def _positive_int(text)`
 - `def _bin_width(text)`
-- `def _row(candidate, width)`
 - `def build_parser()`
 - `def _failure(what, why, fix)`
 - `def main(argv)`
@@ -126,6 +124,20 @@
 
 ---
 
+### [`pnn/pipeline.py`](pnn/pipeline.py)
+> *Command-line end-to-end Phase 2 lead selection for the PNN project.*
+
+**Size**: `137` lines (`4489` bytes)
+
+**Functions:**
+- `def _positive_int(text)`
+- `def _bin_width(text)`
+- `def build_parser()`
+- `def _failure(what, why, fix)`
+- `def main(argv)`
+
+---
+
 ### [`pnn/rank.py`](pnn/rank.py)
 > *Command-line consensus ranking of docking results for PNN Phase 2.*
 
@@ -146,15 +158,16 @@
 ---
 
 ### [`pnn/reports.py`](pnn/reports.py)
-> *Atomic CSV and JSON report writers shared by the PNN command line tools.*
+> *Atomic CSV, JSON and text report writers shared by the PNN command line tools.*
 
-**Size**: `56` lines (`1682` bytes)
+**Size**: `68` lines (`2038` bytes)
 
 **Functions:**
 - `def _open_temp(path)`
 - `def _finish(path, handle)`
 - `def write_csv(path, fieldnames, rows)` - *Write `rows` as CSV to a temporary file, then replace `path` atomically.*
 - `def write_json(path, report)` - *Write `report` as JSON to a temporary file, then replace `path` atomically.*
+- `def write_text(path, text)` - *Write `text` to a temporary file, then replace `path` atomically.*
 
 ---
 
@@ -199,6 +212,40 @@
 - `def evaluate_compound(compound)` - *Evaluate every rule for one compound and assign its tier.*
 - `def screen_compounds(compounds)` - *Evaluate and rank compounds by tier, then score (highest first), then ID.*
 - `def summarize(results)` - *Count tiers and report the scored average, including rejected compounds.*
+
+---
+
+### [`pnn/selection.py`](pnn/selection.py)
+> *End-to-end Phase 2 lead selection for the PNN project.*
+
+**Size**: `336` lines (`12882` bytes)
+
+**Classes:**
+- `class PipelineError` - *Raised when a Phase 2 run cannot produce a defensible lead set.*
+- `class LeadSelection` - *The selected compounds and the audit counts for one Phase 2 run.*
+- `class LeadRun` - *A completed run: selected compounds, written artifacts and the manifest.*
+
+**Functions:**
+- `def _digest(path)` - *Return the SHA-256 hex digest of a file without loading it whole.*
+- `def _load_inputs(paths)`
+- `def _screen_table(results)`
+- `def select_leads(inputs, docking, min_tier, per_bin, bin_width, max_compounds, max_rmsd, min_vina)` - *Curate, screen and rank one lead set from compound and docking CSVs.*
+- `def _options(min_tier, per_bin, bin_width, max_compounds, max_rmsd, min_vina)`
+- `def _manifest(selection, outputs, options)`
+- `def render_lead_report(selection, options, top_n)` - *Render a comprehensive Markdown lead report honoring G-001, G-002, and G-003.*
+- `def run_pipeline(inputs, docking, out_dir, min_tier, per_bin, bin_width, max_compounds, max_rmsd, min_vina, top_n_report)` - *Run the three Phase 2 stages and write their artifacts, report and manifest.*
+
+---
+
+### [`pnn/tables.py`](pnn/tables.py)
+> *CSV row contracts shared by the PNN Phase 2 command line tools.*
+
+**Size**: `108` lines (`3053` bytes)
+
+**Functions:**
+- `def _optional(value)`
+- `def curated_row(candidate, width)` - *Return one curated-library row, including source and property bin.*
+- `def screen_row(result)` - *Return one ranked-screening row for a screened compound.*
 
 ---
 
@@ -288,6 +335,28 @@
 - `class ProjectDocsTest`
   - Method `.test_required_documents_exist()`
   - Method `.test_readme_tree_lists_only_existing_paths()`
+
+---
+
+### [`tests/test_pipeline.py`](tests/test_pipeline.py)
+> *Unit and CLI integration tests for the end-to-end Phase 2 lead selection pipeline.*
+
+**Size**: `206` lines (`8185` bytes)
+
+**Classes:**
+- `class PipelineTest`
+  - Method `.setUp()`
+  - Method `.read_rows(path)`
+  - Method `.run_cli(*argv)`
+  - Method `.test_select_leads_end_to_end()`
+  - Method `.test_select_leads_raises_on_empty_input()`
+  - Method `.test_select_leads_raises_when_curation_empties_set()`
+  - Method `.test_select_leads_raises_when_no_shortlist_survives()`
+  - Method `.test_render_lead_report_guidelines_and_evidence()`
+  - Method `.test_run_pipeline_produces_all_artifacts_and_hashed_manifest()`
+  - Method `.test_cli_execution_success()`
+  - Method `.test_cli_execution_failure_triad()`
+  - Method `.test_cli_help()`
 
 ---
 

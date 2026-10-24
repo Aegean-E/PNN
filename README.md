@@ -38,6 +38,7 @@ PNN/
 ├── computational/                 <- Computational approaches
 │   ├── docking_protocols.md       <- Molecular docking procedures
 │   ├── docking_ranking.md         <- Docking consensus contract and normalization
+│   ├── lead_selection.md          <- End-to-end lead selection workflow and manifest
 │   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
 │   └── screening_pipeline.md      <- Phase 2 property screening contract and rules
 ├── experimental/                  <- Experimental validation
@@ -60,16 +61,20 @@ PNN/
 │   ├── curate.py                  <- `python -m pnn.curate` library command
 │   ├── curation.py                <- Merge, dedupe and property-space caps
 │   ├── docking.py                 <- Docking ingestion and consensus normalization
+│   ├── pipeline.py                <- `python -m pnn.pipeline` lead selection CLI
 │   ├── rank.py                    <- `python -m pnn.rank` shortlist command
 │   ├── reports.py                 <- Atomic CSV/JSON writers
 │   ├── rules.py                   <- CNS/BBB property rules
-│   └── screen.py                  <- Tiering, scoring and ranking
+│   ├── screen.py                  <- Tiering, scoring and ranking
+│   ├── selection.py               <- End-to-end pipeline execution and lead report
+│   └── tables.py                  <- Shared tabular CSV row contracts
 └── tests/                         <- Regression shield (docs and pipeline behaviour)
     ├── __init__.py                <- Makes the test package importable
     ├── test_cli.py                <- Screening command contract
     ├── test_curation.py           <- Merge, dedupe, bins and CLI contract
     ├── test_docking.py            <- Docking ingestion and normalization
     ├── test_docs.py               <- Required docs and README tree paths
+    ├── test_pipeline.py           <- End-to-end pipeline and manifest tests
     ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
     └── test_screen.py             <- Tiering, ranking and CSV ingestion
@@ -124,6 +129,25 @@ python -m pnn.curate vendor_a.csv vendor_b.csv \
 Every kept row retains its `source` path and `property_bin`; the JSON summary
 reports duplicate, tier and cap removals. Exact-SMILES matching is not chemical
 canonicalization; see [computational/library_curation.md](computational/library_curation.md).
+
+## Phase 2: End-to-End Lead Selection Pipeline
+
+`python -m pnn.pipeline` executes the full Phase 2 computational triage workflow
+in one reproducible run: it curates multi-source compound libraries, screens CNS/BBB
+physicochemical properties, joins docking consensus scores across targets, and
+writes tabular datasets, a Markdown lead report, and a hashed manifest.
+
+```bash
+python -m pnn.pipeline vendor_library.csv repurposing_library.csv \
+    --docking data/docking/scores_template.csv \
+    --out-dir phase2_lead_run \
+    --min-tier B --per-bin 25 --max-rmsd 2.0
+```
+
+The run produces `curated_library.csv`, `ranked_compounds.csv`, `shortlist.csv`,
+`lead_report.md` (highlighting evidence gaps and G-001/G-002/G-003 limits), and
+`manifest.json` under schema `pnn.phase2.pipeline/1` with SHA-256 digests for all
+inputs and artifacts. Details are in [computational/lead_selection.md](computational/lead_selection.md).
 
 ## Core Scientific Hypothesis
 Hypothalamic PNNs (primarily composed of chondroitin sulfate proteoglycans - CSPGs) create a physical and signaling barrier that:

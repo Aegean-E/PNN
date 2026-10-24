@@ -1,4 +1,4 @@
-"""Atomic CSV and JSON report writers shared by the PNN command line tools."""
+"""Atomic CSV, JSON and text report writers shared by the PNN command line tools."""
 
 from __future__ import annotations
 
@@ -49,6 +49,18 @@ def write_json(path: Path, report: Mapping[str, object]) -> None:
     try:
         json.dump(report, handle, indent=2, sort_keys=True)
         handle.write("\n")
+    except BaseException:
+        handle.close()
+        Path(handle.name).unlink(missing_ok=True)
+        raise
+    _finish(destination, handle)
+
+
+def write_text(path: Path, text: str) -> None:
+    """Write `text` to a temporary file, then replace `path` atomically."""
+    destination, handle = _open_temp(path)
+    try:
+        handle.write(text)
     except BaseException:
         handle.close()
         Path(handle.name).unlink(missing_ok=True)

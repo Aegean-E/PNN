@@ -8,35 +8,9 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from .compounds import CompoundError, load_compounds
-from .curation import (
-    Candidate,
-    CurationError,
-    curate,
-    deduplicate,
-    prepare_candidates,
-    property_bin,
-)
+from .curation import CurationError, curate, deduplicate, prepare_candidates
 from .reports import write_csv, write_json
-
-CURATED_FIELDS = (
-    "compound_id",
-    "name",
-    "smiles",
-    "source",
-    "tier",
-    "score",
-    "mw",
-    "logp",
-    "tpsa",
-    "hbd",
-    "hba",
-    "rotatable_bonds",
-    "pka",
-    "charge",
-    "property_bin",
-    "failed_criteria",
-    "unknown_criteria",
-)
+from .tables import CURATED_FIELDS, curated_row
 
 
 def _positive_int(text: str) -> int:
@@ -51,29 +25,6 @@ def _bin_width(text: str) -> float:
     if not 0.0 < value <= 1.0:
         raise argparse.ArgumentTypeError("must be greater than 0 and at most 1")
     return value
-
-
-def _row(candidate: Candidate, width: float) -> dict:
-    compound = candidate.compound
-    return {
-        "compound_id": compound.compound_id,
-        "name": compound.name,
-        "smiles": compound.smiles,
-        "source": candidate.source,
-        "tier": candidate.result.tier,
-        "score": f"{candidate.result.score:.4f}",
-        "mw": compound.mw,
-        "logp": compound.logp,
-        "tpsa": compound.tpsa,
-        "hbd": compound.hbd,
-        "hba": compound.hba,
-        "rotatable_bonds": compound.rotatable_bonds,
-        "pka": "" if compound.pka is None else compound.pka,
-        "charge": compound.charge,
-        "property_bin": "-".join(str(cell) for cell in property_bin(compound, width)),
-        "failed_criteria": ";".join(candidate.result.failed_criteria()),
-        "unknown_criteria": ";".join(candidate.result.unknown_criteria()),
-    }
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -128,7 +79,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 "every input compound was rejected by the tier floor or the input set was empty.",
                 "add better-characterized compounds or relax --min-tier.",
             )
-        write_csv(out, CURATED_FIELDS, [_row(candidate, args.bin_width) for candidate in selected])
+        write_csv(out, CURATED_FIELDS, [curated_row(candidate, args.bin_width) for candidate in selected])
         if args.json_path:
             write_json(
                 Path(args.json_path),

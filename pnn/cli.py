@@ -11,30 +11,8 @@ from .compounds import CompoundError, load_compounds
 from .reports import write_csv, write_json
 from .rules import CORE_CRITERIA, HARD_REJECT_CRITERIA
 from .screen import TIER_ORDER, ScreenResult, screen_compounds, summarize
+from .tables import SCREEN_FIELDS, screen_row
 
-CSV_FIELDS = (
-    "compound_id",
-    "name",
-    "smiles",
-    "tier",
-    "score",
-    "mw",
-    "logp",
-    "tpsa",
-    "hbd",
-    "hba",
-    "rotatable_bonds",
-    "pka",
-    "charge",
-    "logbb",
-    "brain_plasma_ratio",
-    "oral_bioavailability",
-    "cyp3a4_inhibition",
-    "herg_liability",
-    "pnn_ec50_nm",
-    "failed_criteria",
-    "unknown_criteria",
-)
 _TIER_CEILING = {"A": 0, "B": 1, "C": 2}
 
 
@@ -55,33 +33,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="keep only this tier and better (A, A+B, or A+B+C); rejected compounds are dropped",
     )
     return parser
-
-
-def _row(result: ScreenResult) -> dict:
-    compound = result.compound
-    return {
-        "compound_id": compound.compound_id,
-        "name": compound.name,
-        "smiles": compound.smiles,
-        "tier": result.tier,
-        "score": f"{result.score:.4f}",
-        "mw": compound.mw,
-        "logp": compound.logp,
-        "tpsa": compound.tpsa,
-        "hbd": compound.hbd,
-        "hba": compound.hba,
-        "rotatable_bonds": compound.rotatable_bonds,
-        "pka": "" if compound.pka is None else compound.pka,
-        "charge": compound.charge,
-        "logbb": "" if compound.logbb is None else compound.logbb,
-        "brain_plasma_ratio": "" if compound.brain_plasma_ratio is None else compound.brain_plasma_ratio,
-        "oral_bioavailability": "" if compound.oral_bioavailability is None else compound.oral_bioavailability,
-        "cyp3a4_inhibition": "" if compound.cyp3a4_inhibition is None else compound.cyp3a4_inhibition,
-        "herg_liability": "" if compound.herg_liability is None else compound.herg_liability,
-        "pnn_ec50_nm": "" if compound.pnn_ec50_nm is None else compound.pnn_ec50_nm,
-        "failed_criteria": ";".join(result.failed_criteria()),
-        "unknown_criteria": ";".join(result.unknown_criteria()),
-    }
 
 
 def _filter(results: Sequence[ScreenResult], min_tier: Optional[str]) -> List[ScreenResult]:
@@ -115,7 +66,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         compounds = load_compounds(Path(args.input))
         results = screen_compounds(compounds)
         kept = _filter(results, args.min_tier)
-        write_csv(out, CSV_FIELDS, [_row(result) for result in kept])
+        write_csv(out, SCREEN_FIELDS, [screen_row(result) for result in kept])
         if args.json_path:
             write_json(Path(args.json_path), _report(results, kept, args.input, out))
     except CompoundError as exc:

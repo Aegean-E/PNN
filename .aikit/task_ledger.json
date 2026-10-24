@@ -1,12 +1,12 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-phase2-curation",
+    "task_id": "pnn-phase2-pipeline",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792698884.4696686,
-    "completed_at": 1792698884.6412163
+    "updated_at": 1792831102.8404338,
+    "completed_at": 1792831401.019208
   },
   "checkpoints": [
     {
@@ -132,6 +132,41 @@
       "status": "completed",
       "timestamp": 1792698884.6412177,
       "timestamp_str": "2026-10-22 22:54:44"
+    },
+    {
+      "task_id": "pnn-phase2-pipeline",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/4] Add an end-to-end Phase 2 lead-selection run: curate -> screen -> consensus rank, a hashed run manifest, and a Markdown lead report.",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792829820.3652809,
+      "timestamp_str": "2026-10-24 11:17:00",
+      "impact_assessment": {
+        "why": "The three Phase 2 commands work in isolation but nothing produces the Phase 2 deliverable as one reproducible, auditable run with provenance and evidence gaps.",
+        "benefits": "One command turns vendor CSVs and docking exports into a traceable lead set, and the manifest hashes make every artifact checkable after the fact.",
+        "risks": "contract: new manifest and report schemas plus a new CLI; dependency: none, standard library only; concurrency: outputs are atomic and each run owns its out-dir; state: no persisted state beyond generated artifacts.",
+        "mitigation": "Freeze the schemas in docs and a new ADR, hash every input and output, keep the three stages as the existing tested functions, and cover chain, empty-stage, report and manifest paths with tests."
+      }
+    },
+    {
+      "task_id": "pnn-phase2-pipeline",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 75 tests pass; Phase 4 gates 4/4 (test, hygiene, guidelines, secrets); pipeline CLI and report complete; checklists: passed; uncommitted pending authorization",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792831102.8404338,
+      "timestamp_str": "2026-10-24 11:38:22"
+    },
+    {
+      "task_id": "pnn-phase2-pipeline",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-phase2-pipeline' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792831401.01921,
+      "timestamp_str": "2026-10-24 11:43:21"
     }
   ]
 }

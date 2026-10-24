@@ -32,3 +32,11 @@ contract, a dependency, a data format or the architecture; IDs are consecutive a
 - **Context**: Phase 2 needs to merge several compound sources without duplicate identities or property-space clumps, but the project has no chemistry toolkit for canonicalization or scaffold analysis.
 - **Decision**: `python -m pnn.curate` collapses duplicate `compound_id` values (refusing conflicting SMILES), then exact non-empty SMILES strings, screens every row with the property rules, and caps each normalized six-property bin at `--per-bin` compounds before an optional global limit. Every kept row keeps its source path and bin label; JSON reports every removal count.
 - **Consequences**: The library is reproducible and auditable, and duplicate chemistry is not silently multiplied. Exact-SMILES matching misses salts, tautomers and stereochemistry variants, and bin caps approximate property-space spacing rather than guaranteeing a distance; upstream canonicalization or a chemistry toolkit is required when those distinctions matter.
+
+### ADR-004: End-to-end Phase 2 lead selection pipeline with hashed manifest and report
+- **Date**: 2026-10-24
+- **Status**: Accepted
+- **Context**: The Phase 2 curation, property screening, and docking consensus ranking tools existed as individual CLI steps, but generating an auditable, reproducible lead selection required manual chaining, with no unified cryptographic provenance or consolidated evidence report.
+- **Decision**: Ship `pnn.selection` and `python -m pnn.pipeline` to execute the full workflow in one atomic run: curate -> screen -> consensus rank. The run emits `curated_library.csv`, `ranked_compounds.csv`, `shortlist.csv`, a Markdown `lead_report.md` (highlighting evidence gaps and G-001/G-002/G-003 triage limits), and a `manifest.json` recording SHA-256 digests for all inputs, options, stage metrics and output artifacts under schema `pnn.phase2.pipeline/1`. Shared CSV formatting logic is centralized in `pnn/tables.py`.
+- **Consequences**: Lead selection is strictly reproducible, tamper-evident, and auditable across all stages. Memory is bounded by streaming SHA-256 digest computation. Triage disclaimers in generated reports prevent downstream overclaiming.
+
