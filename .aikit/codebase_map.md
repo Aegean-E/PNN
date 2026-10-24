@@ -7,10 +7,10 @@
 
 ## 📊 Codebase Metrics
 - **Total Python Modules**: `51`
-- **Total Classes**: `87`
-- **Total Top-Level Functions**: `206`
-- **Total Class Methods**: `234`
-- **Total Source Lines**: `12525`
+- **Total Classes**: `88`
+- **Total Top-Level Functions**: `208`
+- **Total Class Methods**: `239`
+- **Total Source Lines**: `12683`
 
 ---
 
@@ -495,13 +495,15 @@
 ### [`pnn/studio.py`](pnn/studio.py)
 > *Interactive Lead & Assay Visualization Studio and Standalone HTML Dashboard for PNN.*
 
-**Size**: `1025` lines (`41172` bytes)
+**Size**: `1112` lines (`44582` bytes)
 
 **Classes:**
 - `class StudioError` - *Raised when studio inputs are malformed or missing required data.*
 - `class StudioCompound`
 
 **Functions:**
+- `def _get_val(obj, key, default)` - *Extract a field from either a dict/mapping or an object attribute with fallback.*
+- `def _get_field(obj, keys, default)` - *Extract first non-empty field matching one of several alias keys.*
 - `def _normalize_cns_axis(val, optimal_center, half_width)`
 - `def generate_radar_svg(compounds, width, height)` - *Generate SVG radar chart for CNS drug-likeness physicochemical properties.*
 - `def generate_docking_heatmap_svg(compounds, targets, cell_w, cell_h)` - *Generate multi-target docking affinity heatmap in SVG.*
@@ -967,7 +969,7 @@
 ---
 
 ### [`tests/test_studio.py`](tests/test_studio.py)
-**Size**: `171` lines (`6447` bytes)
+**Size**: `242` lines (`9955` bytes)
 
 **Classes:**
 - `class TestStudioRendering`
@@ -983,6 +985,12 @@
   - Method `.test_load_studio_data_valid()`
 - `class TestStudioCLI`
   - Method `.test_cli_execution_success()`
+  - Method `.test_cli_execution_with_translational_flags()`
+  - Method `.test_cli_missing_translational_files_error()`
+- `class TestFieldExtraction`
+  - Method `.test_get_val_with_mapping()`
+  - Method `.test_get_val_with_object()`
+  - Method `.test_get_field_aliases()`
 
 ---
 

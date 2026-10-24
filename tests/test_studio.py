@@ -5,6 +5,8 @@ from pathlib import Path
 from pnn.studio import (
     StudioCompound,
     StudioError,
+    _get_field,
+    _get_val,
     generate_circuit_dynamics_svg,
     generate_docking_heatmap_svg,
     generate_pk_curve_svg,
@@ -135,9 +137,10 @@ class TestStudioDataLoader(unittest.TestCase):
             load_studio_data(Path("non_existent.csv"))
 
     def test_load_studio_data_valid(self) -> None:
-        comp_path = Path("data/compounds/vendor_library.csv")
-        dock_path = Path("data/docking/multi_target_scores.csv")
-        pk_path = Path("data/preclinical/pk_timecourse_template.csv")
+        project_root = Path(__file__).resolve().parent.parent
+        comp_path = project_root / "data/compounds/vendor_library.csv"
+        dock_path = project_root / "data/docking/multi_target_scores.csv"
+        pk_path = project_root / "data/preclinical/pk_timecourse_template.csv"
         if not comp_path.is_file():
             return
         compounds, targets = load_studio_data(
@@ -152,8 +155,9 @@ class TestStudioDataLoader(unittest.TestCase):
 
 class TestStudioCLI(unittest.TestCase):
     def test_cli_execution_success(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
         with tempfile.TemporaryDirectory() as tmp_dir:
-            comp_path = Path("data/compounds/vendor_library.csv")
+            comp_path = project_root / "data/compounds/vendor_library.csv"
             if not comp_path.is_file():
                 return
             out_html = Path(tmp_dir) / "studio.html"
@@ -165,6 +169,73 @@ class TestStudioCLI(unittest.TestCase):
             self.assertTrue(out_html.is_file())
             content = out_html.read_text(encoding="utf-8")
             self.assertIn("<!DOCTYPE html>", content)
+            self.assertIn("Receptor & Aggrecanase Target Invariants", content)
+
+    def test_cli_execution_with_translational_flags(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        comp_path = project_root / "data/compounds/vendor_library.csv"
+        if not comp_path.is_file():
+            return
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_html = Path(tmp_dir) / "studio_trans.html"
+            sim_csv = Path(tmp_dir) / "sim.csv"
+            sim_csv.write_text("time_h,pnn_density_pct,akt_signaling_pct\n0.0,100.0,45.0\n48.0,40.0,90.0\n", encoding="utf-8")
+            dos_csv = Path(tmp_dir) / "dossier.csv"
+            dos_csv.write_text("compound_id,name,animal_dose_mg_kg,human_total_daily_dose_mg,projected_human_half_life_h,phase1_mrsd_mg,therapeutic_index,evidence_status\nPNN-101,HypoSprint-1,10.0,48.6,17.0,58.4,6,COMPLETE\n", encoding="utf-8")
+            saf_csv = Path(tmp_dir) / "safety.csv"
+            saf_csv.write_text("compound_id,status,most_sensitive_species,noael_mg_kg,herg_margin,cyp3a4_inhibition_pct,genotoxicity\nPNN-101,SAFE_TO_PROGRESS,rat,50.0,51.4,12.5,NEGATIVE\n", encoding="utf-8")
+
+            rc = main([
+                "--compounds", str(comp_path),
+                "--simulation", str(sim_csv),
+                "--dossier", str(dos_csv),
+                "--safety", str(saf_csv),
+                "--out", str(out_html),
+            ])
+            self.assertEqual(rc, 0)
+            self.assertTrue(out_html.is_file())
+            content = out_html.read_text(encoding="utf-8")
+            self.assertIn("Hypothalamic Circuit Dosing Dynamics", content)
+            self.assertIn("Investigational New Drug (IND)", content)
+            self.assertIn("Safety Pharmacology", content)
+            self.assertIn("48.6 mg", content)
+            self.assertIn("50.0 mg/kg", content)
+            self.assertIn("51.4x", content)
+
+    def test_cli_missing_translational_files_error(self) -> None:
+        project_root = Path(__file__).resolve().parent.parent
+        comp_path = project_root / "data/compounds/vendor_library.csv"
+        if not comp_path.is_file():
+            return
+        rc = main([
+            "--compounds", str(comp_path),
+            "--simulation", "non_existent_sim.csv",
+        ])
+        self.assertEqual(rc, 1)
+
+
+class TestFieldExtraction(unittest.TestCase):
+    def test_get_val_with_mapping(self) -> None:
+        d = {"key": "val", "empty": "", "none": None}
+        self.assertEqual(_get_val(d, "key"), "val")
+        self.assertEqual(_get_val(d, "empty"), "-")
+        self.assertEqual(_get_val(d, "none"), "-")
+        self.assertEqual(_get_val(d, "missing", "def"), "def")
+
+    def test_get_val_with_object(self) -> None:
+        class Dummy:
+            key = "val"
+            none = None
+        obj = Dummy()
+        self.assertEqual(_get_val(obj, "key"), "val")
+        self.assertEqual(_get_val(obj, "none"), "-")
+        self.assertEqual(_get_val(obj, "missing", "fallback"), "fallback")
+
+    def test_get_field_aliases(self) -> None:
+        d = {"b": "found"}
+        self.assertEqual(_get_field(d, ["a", "b", "c"]), "found")
+        self.assertEqual(_get_field(d, ["x", "y"], "default"), "default")
+        self.assertEqual(_get_field(None, ["a", "b"], "default"), "default")
 
 
 if __name__ == "__main__":

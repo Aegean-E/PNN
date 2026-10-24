@@ -9,9 +9,32 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .reports import write_text
+from .target import list_targets
+
+
+def _get_val(obj: Any, key: str, default: Any = "-") -> Any:
+    """Extract a field from either a dict/mapping or an object attribute with fallback."""
+    if obj is None:
+        return default
+    if isinstance(obj, Mapping) or hasattr(obj, "get"):
+        val = obj.get(key, default)
+    else:
+        val = getattr(obj, key, default)
+    return default if val is None or val == "" else val
+
+
+def _get_field(obj: Any, keys: Sequence[str], default: Any = "-") -> Any:
+    """Extract first non-empty field matching one of several alias keys."""
+    if obj is None:
+        return default
+    for k in keys:
+        val = _get_val(obj, k, default=None)
+        if val is not None and val != "" and val != "-":
+            return val
+    return default
 
 
 class StudioError(ValueError):
@@ -263,9 +286,9 @@ def generate_circuit_dynamics_svg(
     parsed_pts: List[Tuple[float, float, float]] = []
     for pt in simulation_points:
         try:
-            t = float(pt.get("time_h", 0.0))
-            pnn = float(pt.get("pnn_density_pct", 100.0))
-            akt = float(pt.get("akt_signaling_pct", 45.0))
+            t = float(_get_field(pt, ["time_h", "time", "t_h"], 0.0))
+            pnn = float(_get_field(pt, ["pnn_density_pct", "pnn_density", "pnn"], 100.0))
+            akt = float(_get_field(pt, ["akt_signaling_pct", "akt_signaling", "akt"], 45.0))
             parsed_pts.append((t, pnn, akt))
         except (ValueError, TypeError):
             continue
@@ -395,24 +418,38 @@ def render_studio_html(
     if dossier_data:
         dossier_rows = []
         for row in dossier_data:
-            cid = html.escape(str(row.get("compound_id", "-")))
-            chem = html.escape(str(row.get("chemotype", "-")))
-            evid = html.escape(str(row.get("evidence_status", row.get("evidence", "-"))))
+            cid = html.escape(str(_get_field(row, ["compound_id", "id"], "-")))
+            chem = html.escape(str(_get_field(row, ["chemotype", "name"], "-")))
+            evid = html.escape(str(_get_field(row, ["evidence_status", "evidence"], "-")))
             evid_cls = "badge-safe" if evid == "COMPLETE" else "badge-caution"
-            dose = html.escape(str(row.get("animal_dose_mg_kg", "-")))
-            hdose = html.escape(str(row.get("human_dose_mg_day", "-")))
-            ht12 = html.escape(str(row.get("human_t12_h", "-")))
-            mrsd = html.escape(str(row.get("mrsd_mg", "-")))
-            margin = html.escape(str(row.get("safety_margin", "-")))
+
+            dose_val = _get_field(row, ["animal_dose_mg_kg", "animal_dose"], "-")
+            dose = f"{html.escape(str(dose_val))} mg/kg" if dose_val != "-" else "-"
+
+            hdose_val = _get_field(row, ["human_total_daily_dose_mg", "human_dose_mg_day", "human_dose"], "-")
+            hdose = f"{html.escape(str(hdose_val))} mg" if hdose_val != "-" else "-"
+
+            ht12_val = _get_field(row, ["projected_human_half_life_h", "human_t12_h", "human_t12"], "-")
+            ht12 = f"{html.escape(str(ht12_val))} h" if ht12_val != "-" else "-"
+
+            mrsd_val = _get_field(row, ["phase1_mrsd_mg", "mrsd_mg", "mrsd"], "-")
+            mrsd = f"{html.escape(str(mrsd_val))} mg" if mrsd_val != "-" else "-"
+
+            margin_raw = str(_get_field(row, ["therapeutic_index", "safety_margin"], "-"))
+            if margin_raw != "-":
+                margin = html.escape(margin_raw if margin_raw.endswith("x") else f"{margin_raw}x")
+            else:
+                margin = "-"
+
             dossier_rows.append(f"""
             <tr>
               <td><strong>{cid}</strong></td>
               <td>{chem}</td>
               <td><span class="{evid_cls}">{evid}</span></td>
-              <td>{dose} mg/kg</td>
-              <td>{hdose} mg</td>
-              <td>{ht12} h</td>
-              <td>{mrsd} mg</td>
+              <td>{dose}</td>
+              <td>{hdose}</td>
+              <td>{ht12}</td>
+              <td>{mrsd}</td>
               <td><strong>{margin}</strong></td>
             </tr>""")
         dossier_section = f"""
@@ -444,23 +481,36 @@ def render_studio_html(
     if safety_data:
         safety_rows = []
         for row in safety_data:
-            cid = html.escape(str(row.get("compound_id", "-")))
-            stat = html.escape(str(row.get("status", "-")))
+            cid = html.escape(str(_get_field(row, ["compound_id", "id"], "-")))
+            stat = html.escape(str(_get_field(row, ["status"], "-")))
             stat_cls = "badge-safe" if stat == "SAFE_TO_PROGRESS" else ("badge-fail" if stat == "FAIL_SAFETY" else "badge-caution")
-            spec = html.escape(str(row.get("most_sensitive_species", "-")))
-            noael = html.escape(str(row.get("most_sensitive_noael_mg_kg", "-")))
-            herg = html.escape(str(row.get("herg_margin", "-")))
-            cyp = html.escape(str(row.get("cyp3a4_inhibition_pct", "-")))
-            geno = html.escape(str(row.get("genotoxicity", "-")))
+            spec = html.escape(str(_get_field(row, ["most_sensitive_species", "species"], "-")))
+
+            noael_val = _get_field(row, ["noael_mg_kg", "most_sensitive_noael_mg_kg", "noael"], "-")
+            noael = f"{html.escape(str(noael_val))} mg/kg" if noael_val != "-" else "-"
+
+            herg_raw = str(_get_field(row, ["herg_margin", "herg"], "-"))
+            if herg_raw != "-":
+                herg = html.escape(herg_raw if herg_raw.endswith("x") else f"{herg_raw}x")
+            else:
+                herg = "-"
+
+            cyp_raw = str(_get_field(row, ["cyp3a4_inhibition_pct", "cyp3a4_inhibition", "cyp"], "-"))
+            if cyp_raw != "-":
+                cyp = html.escape(cyp_raw if cyp_raw.endswith("%") else f"{cyp_raw}%")
+            else:
+                cyp = "-"
+
+            geno = html.escape(str(_get_field(row, ["genotoxicity"], "-")))
             geno_cls = "badge-safe" if geno == "NEGATIVE" else "badge-fail"
             safety_rows.append(f"""
             <tr>
               <td><strong>{cid}</strong></td>
               <td><span class="{stat_cls}">{stat}</span></td>
               <td>{spec}</td>
-              <td>{noael} mg/kg</td>
+              <td>{noael}</td>
               <td>{herg}</td>
-              <td>{cyp}%</td>
+              <td>{cyp}</td>
               <td><span class="{geno_cls}">{geno}</span></td>
             </tr>""")
         safety_section = f"""
@@ -491,19 +541,20 @@ def render_studio_html(
     if targets_data:
         target_rows = []
         for t in targets_data:
-            tid = html.escape(str(getattr(t, "target_id", getattr(t, "get", lambda k, d="": d)("target_id", "-"))))
-            gene = html.escape(str(getattr(t, "gene_symbol", getattr(t, "get", lambda k, d="": d)("gene_symbol", "-"))))
-            pdb = html.escape(str(getattr(t, "primary_pdb", getattr(t, "get", lambda k, d="": d)("primary_pdb", "-"))))
-            res = html.escape(str(getattr(t, "resolution_angstrom", getattr(t, "get", lambda k, d="": d)("resolution_angstrom", "-"))))
-            ptype = html.escape(str(getattr(t, "pocket_type", getattr(t, "get", lambda k, d="": d)("pocket_type", "-"))))
-            drug = html.escape(str(getattr(t, "druggability", getattr(t, "get", lambda k, d="": d)("druggability", "-"))))
-            bio = html.escape(str(getattr(t, "biological_function", getattr(t, "get", lambda k, d="": d)("biological_function", "-"))))
+            tid = html.escape(str(_get_field(t, ["target_id", "id"], "-")))
+            gene = html.escape(str(_get_field(t, ["gene_symbol", "gene"], "-")))
+            pdb = html.escape(str(_get_field(t, ["primary_pdb", "pdb"], "-")))
+            res_val = _get_field(t, ["resolution_angstrom", "resolution"], "-")
+            res = f"{html.escape(str(res_val))} &Aring;" if res_val != "-" else "-"
+            ptype = html.escape(str(_get_field(t, ["pocket_type", "pocket"], "-")))
+            drug = html.escape(str(_get_field(t, ["druggability"], "-")))
+            bio = html.escape(str(_get_field(t, ["biological_function", "function"], "-")))
             target_rows.append(f"""
             <tr>
               <td><strong>{tid}</strong></td>
               <td><code>{gene}</code></td>
               <td><strong>{pdb}</strong></td>
-              <td>{res} Å</td>
+              <td>{res}</td>
               <td>{ptype}</td>
               <td>{drug}</td>
               <td style="font-size:0.8rem; color:#94a3b8;">{bio}</td>
@@ -983,6 +1034,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--assays", help="optional path to in vitro assays CSV")
     parser.add_argument("--pk", help="optional path to in vivo PK time-course CSV")
     parser.add_argument("--candidates", help="optional path to preclinical candidates CSV")
+    parser.add_argument("--dossier", help="optional path to human dose projections CSV")
+    parser.add_argument("--safety", help="optional path to safety assessments CSV")
+    parser.add_argument("--simulation", help="optional path to pathway simulation CSV")
     parser.add_argument("--out", default="studio.html", help="output destination HTML file (default: studio.html)")
     return parser
 
@@ -1002,7 +1056,40 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         heatmap_svg = generate_docking_heatmap_svg(compounds[:7], targets)
         pk_svg = generate_pk_curve_svg(compounds)
 
-        html_out = render_studio_html(compounds, radar_svg, heatmap_svg, pk_svg)
+        circuit_svg = None
+        if args.simulation:
+            sim_path = Path(args.simulation)
+            if not sim_path.is_file():
+                raise StudioError(f"simulation file not found: {sim_path}")
+            with open(sim_path, "r", encoding="utf-8") as handle:
+                circuit_svg = generate_circuit_dynamics_svg(list(csv.DictReader(handle)))
+
+        dossier_data = None
+        if args.dossier:
+            dos_path = Path(args.dossier)
+            if not dos_path.is_file():
+                raise StudioError(f"dossier file not found: {dos_path}")
+            with open(dos_path, "r", encoding="utf-8") as handle:
+                dossier_data = list(csv.DictReader(handle))
+
+        safety_data = None
+        if args.safety:
+            saf_path = Path(args.safety)
+            if not saf_path.is_file():
+                raise StudioError(f"safety assessments file not found: {saf_path}")
+            with open(saf_path, "r", encoding="utf-8") as handle:
+                safety_data = list(csv.DictReader(handle))
+
+        html_out = render_studio_html(
+            compounds,
+            radar_svg=radar_svg,
+            heatmap_svg=heatmap_svg,
+            pk_svg=pk_svg,
+            circuit_svg=circuit_svg,
+            dossier_data=dossier_data,
+            safety_data=safety_data,
+            targets_data=list_targets(),
+        )
         out_path = Path(args.out)
         write_text(out_path, html_out)
 

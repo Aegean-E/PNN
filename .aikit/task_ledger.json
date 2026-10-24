@@ -1,44 +1,23 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-studio-and-targets-v1",
-    "last_phase": "phase 4",
+    "task_id": "pnn-studio-polymorphic-fields-v1",
+    "last_phase": "planning",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792877469.589638,
-    "owner": "antigravity:a829958c",
-    "started_by": "antigravity:a829958c",
+    "updated_at": 1792878398.2473283,
+    "owner": "antigravity",
+    "started_by": "antigravity",
     "continuations": [],
-    "completed_at": 1792877525.0327485
+    "impact_assessment": {
+      "why": "Resolve column key mismatches for IND dossier and safety pharmacology in studio dashboard",
+      "benefits": "Populates measured values in IND and safety tables with robust alias handling and adds CLI flags",
+      "risks": "contract: no breaking changes; dependency: standard library only; concurrency: none; state: immutable render",
+      "mitigation": "Comprehensive unit test coverage for mappings, dataclasses, and missing file CLI handling"
+    },
+    "completed_at": 1792878402.7057822
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-advanced-translational-platform-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/6] Implement Hypothalamic Circuit & Dosing Dynamics Simulator (pnn/pathway.py)",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792860446.7041867,
-      "timestamp_str": "2026-10-24 19:47:26",
-      "impact_assessment": {
-        "why": "PNN requires complete translational capabilities: dosing dynamics to prevent synaptic plasticity side-effects, allometric human clinical dose projection for IND filing, automated bioisosteric optimization of leads, and molecular dynamics trajectory stability analysis.",
-        "benefits": "Enables intermittent pulsatile dosing regimens via systems pharmacology ODEs; computes human clinical starting dose and therapeutic index; generates metabolically shielded bioisosteric analogs; validates kinetic stability of docking poses via MD metrics.",
-        "risks": "contract: new simulation, IND, bioisostere, and trajectory schemas; dependency: none, Python standard library only; concurrency: atomic output writers; state: no persistent state beyond generated CSV, JSON, and Markdown reports.",
-        "mitigation": "Unit test coverage for mathematical ODEs, allometric scaling, SMILES transformations, and trajectory parsers; register ADR-008."
-      }
-    },
-    {
-      "task_id": "pnn-advanced-translational-platform-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 153 tests pass in 1.0s; 4/4 gates pass (test, hygiene, guidelines, secrets); ADR-008 recorded; checklists: passed",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792861635.483759,
-      "timestamp_str": "2026-10-24 20:07:15",
-      "agent": "unidentified"
-    },
     {
       "task_id": "pnn-advanced-translational-platform-v1",
       "phase": "completed",
@@ -255,6 +234,33 @@
       "timestamp": 1792877525.03275,
       "timestamp_str": "2026-10-25 00:32:05",
       "agent": "antigravity:a829958c"
+    },
+    {
+      "task_id": "pnn-studio-polymorphic-fields-v1",
+      "phase": "planning",
+      "phase_num": 2,
+      "description": "[1/1] Harmonize studio translational field aliases and enhance CLI",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792878398.2473283,
+      "timestamp_str": "2026-10-25 00:46:38",
+      "agent": "antigravity",
+      "impact_assessment": {
+        "why": "Resolve column key mismatches for IND dossier and safety pharmacology in studio dashboard",
+        "benefits": "Populates measured values in IND and safety tables with robust alias handling and adds CLI flags",
+        "risks": "contract: no breaking changes; dependency: standard library only; concurrency: none; state: immutable render",
+        "mitigation": "Comprehensive unit test coverage for mappings, dataclasses, and missing file CLI handling"
+      }
+    },
+    {
+      "task_id": "pnn-studio-polymorphic-fields-v1",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-studio-polymorphic-fields-v1' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792878402.7057836,
+      "timestamp_str": "2026-10-25 00:46:42",
+      "agent": "antigravity"
     }
   ]
 }
