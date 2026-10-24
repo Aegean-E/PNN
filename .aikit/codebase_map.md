@@ -6,20 +6,20 @@
 ---
 
 ## 📊 Codebase Metrics
-- **Total Python Modules**: `23`
-- **Total Classes**: `28`
-- **Total Top-Level Functions**: `88`
-- **Total Class Methods**: `92`
-- **Total Source Lines**: `3165`
+- **Total Python Modules**: `29`
+- **Total Classes**: `37`
+- **Total Top-Level Functions**: `104`
+- **Total Class Methods**: `113`
+- **Total Source Lines**: `4448`
 
 ---
 
 ## 📦 Modules & Exported Symbols
 
 ### [`pnn/__init__.py`](pnn/__init__.py)
-> *Phase 2 CNS/BBB property screening for the PNN research project.*
+> *Phase 2 and Phase 3 computational and in vitro validation pipeline for PNN.*
 
-**Size**: `37` lines (`908` bytes)
+**Size**: `69` lines (`1616` bytes)
 
 ---
 
@@ -27,6 +27,31 @@
 > *Run the PNN screening pipeline as `python -m pnn`.*
 
 **Size**: `6` lines (`137` bytes)
+
+---
+
+### [`pnn/assay.py`](pnn/assay.py)
+> *Phase 3 in vitro assay ingestion, hit qualification, and reporting for PNN.*
+
+**Size**: `525` lines (`21705` bytes)
+
+**Classes:**
+- `class AssayError` - *Raised when in vitro assay data is malformed or violates contract.*
+- `class DegradationResult`
+- `class PermeabilityResult`
+- `class CytotoxicityResult`
+- `class QualifiedHit`
+  - Method `.as_row()`
+
+**Functions:**
+- `def _parse_float(val, field_name, row_id)`
+- `def load_degradation_data(path)` - *Ingest PNN degradation assay CSV.*
+- `def load_permeability_data(path)` - *Ingest BBB permeability assay CSV (PAMPA / MDCK-MDR1).*
+- `def load_cytotoxicity_data(path)` - *Ingest CellTiter-Glo cytotoxicity counter-screen CSV.*
+- `def qualify_leads(degradation, permeability, cytotoxicity, ec50_ceiling_nm, max_deg_floor_pct, pampa_pe_floor, mdck_efflux_ceiling, min_selectivity_index)` - *Qualify leads against Phase 3 in vitro degradation, permeability, and safety criteria.*
+- `def render_assay_report(hits, criteria)` - *Render a comprehensive Phase 3 in vitro qualification Markdown report.*
+- `def build_parser()`
+- `def main(argv)`
 
 ---
 
@@ -249,8 +274,45 @@
 
 ---
 
+### [`pnn/target.py`](pnn/target.py)
+> *Target receptor profiles, binding-pocket invariants and Vina grid generation for PNN.*
+
+**Size**: `277` lines (`10623` bytes)
+
+**Classes:**
+- `class TargetProfile` - *Molecular target profile defining receptor invariants and docking grid coordinates.*
+
+**Functions:**
+- `def get_target(target_id)` - *Retrieve a target profile by case-insensitive ID or alias.*
+- `def list_targets()` - *Return all registered PNN target profiles.*
+- `def generate_vina_config(profile, receptor_pdbqt, out_pdbqt, exhaustiveness, num_modes, energy_range)` - *Format AutoDock Vina grid parameter configuration text.*
+- `def build_parser()`
+- `def main(argv)`
+
+---
+
 ### [`tests/__init__.py`](tests/__init__.py)
 **Size**: `0` lines (`0` bytes)
+
+---
+
+### [`tests/test_assay.py`](tests/test_assay.py)
+> *Unit and CLI tests for Phase 3 in vitro assay ingestion and hit qualification.*
+
+**Size**: `185` lines (`6942` bytes)
+
+**Classes:**
+- `class AssayTest`
+  - Method `.setUp()`
+  - Method `.run_cli(*argv)`
+  - Method `.test_load_degradation_data()`
+  - Method `.test_load_degradation_invalid_numeric_raises()`
+  - Method `.test_load_permeability_and_cytotoxicity()`
+  - Method `.test_qualify_leads_classifications()`
+  - Method `.test_qualify_leads_untested_safety_yields_qualified_lead()`
+  - Method `.test_render_assay_report_contains_guideline_and_tables()`
+  - Method `.test_cli_execution_success()`
+  - Method `.test_cli_failure_triad_on_missing_file()`
 
 ---
 
@@ -335,6 +397,17 @@
 - `class ProjectDocsTest`
   - Method `.test_required_documents_exist()`
   - Method `.test_readme_tree_lists_only_existing_paths()`
+
+---
+
+### [`tests/test_golden.py`](tests/test_golden.py)
+> *Integration test for the PNN Phase 2 golden reference run.*
+
+**Size**: `30` lines (`1024` bytes)
+
+**Classes:**
+- `class GoldenRunTest`
+  - Method `.test_golden_run_execution()`
 
 ---
 
@@ -442,5 +515,36 @@
 **Functions:**
 - `def ideal(compound_id, **overrides)`
 - `def acceptable(compound_id, **overrides)`
+
+---
+
+### [`tests/test_target.py`](tests/test_target.py)
+> *Unit and CLI tests for target receptor profiles and Vina grid generation.*
+
+**Size**: `103` lines (`3702` bytes)
+
+**Classes:**
+- `class TargetProfileTest`
+  - Method `.setUp()`
+  - Method `.run_cli(*argv)`
+  - Method `.test_list_targets_contains_primary_receptors()`
+  - Method `.test_get_target_case_insensitive()`
+  - Method `.test_get_target_unknown_raises_key_error()`
+  - Method `.test_generate_vina_config_format()`
+  - Method `.test_cli_list()`
+  - Method `.test_cli_show_success_and_failure()`
+  - Method `.test_cli_config_export_to_file()`
+
+---
+
+### [`tools/golden_run.py`](tools/golden_run.py)
+> *Execute the PNN Phase 2 golden reference run and verify artifact integrity.*
+
+**Size**: `131` lines (`5240` bytes)
+
+**Functions:**
+- `def _check_digest(path)`
+- `def execute_golden_run(out_dir)` - *Run Phase 2 pipeline & Phase 3 assay checks against reference benchmarks.*
+- `def main(argv)`
 
 ---

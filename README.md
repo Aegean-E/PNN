@@ -40,15 +40,23 @@ PNN/
 │   ├── docking_ranking.md         <- Docking consensus contract and normalization
 │   ├── lead_selection.md          <- End-to-end lead selection workflow and manifest
 │   ├── library_curation.md        <- Merge, dedupe and property-space diversity rules
-│   └── screening_pipeline.md      <- Phase 2 property screening contract and rules
+│   ├── screening_pipeline.md      <- Phase 2 property screening contract and rules
+│   └── target_profiles.md         <- Receptor binding-pocket invariants and Vina grids
 ├── experimental/                  <- Experimental validation
+│   ├── assay_pipeline.md          <- Phase 3 in vitro assay qualification and hit criteria
 │   └── experimental_protocols.md  <- In vitro/in vivo assay protocols
 ├── data/                          <- Data storage
 │   ├── compounds/                 <- Compound libraries
-│   │   └── screening_template.csv  <- Input header for the screening pipeline
+│   │   ├── repurposing_library.csv  <- Annotated CNS repurposing library
+│   │   ├── screening_template.csv  <- Input header for the screening pipeline
+│   │   └── vendor_library.csv      <- Diverse drug-like screening library
 │   ├── docking/                   <- Docking results
+│   │   ├── multi_target_scores.csv  <- Multi-target docking scoring dataset
 │   │   └── scores_template.csv    <- Input header for the consensus ranker
-│   ├── assays/                    <- Assay results (empty until populated)
+│   ├── assays/                    <- Assay results and templates
+│   │   ├── cytotoxicity_template.csv  <- CellTiter-Glo counter-screen template
+│   │   ├── degradation_template.csv  <- Fluorogenic DQ-CS cleavage template
+│   │   └── permeability_template.csv  <- PAMPA / MDCK-MDR1 transport template
 │   └── literature/                <- Extracted literature data (empty until populated)
 ├── docs/                          <- Documentation
 │   ├── cold_start_guide.md        <- AI cold-start instructions
@@ -56,6 +64,7 @@ PNN/
 ├── pnn/                           <- Phase 2 pipeline (standard library only)
 │   ├── __init__.py                <- Public API
 │   ├── __main__.py                <- `python -m pnn` entry point
+│   ├── assay.py                   <- Phase 3 in vitro assay ingestion and hit qualification
 │   ├── cli.py                     <- Screening command contract
 │   ├── compounds.py               <- Compound record and CSV ingestion
 │   ├── curate.py                  <- `python -m pnn.curate` library command
@@ -67,17 +76,23 @@ PNN/
 │   ├── rules.py                   <- CNS/BBB property rules
 │   ├── screen.py                  <- Tiering, scoring and ranking
 │   ├── selection.py               <- End-to-end pipeline execution and lead report
-│   └── tables.py                  <- Shared tabular CSV row contracts
+│   ├── tables.py                  <- Shared tabular CSV row contracts
+│   └── target.py                  <- Receptor profiles and AutoDock Vina grid generation
+├── tools/                         <- Golden runs and automation tools
+│   └── golden_run.py              <- Golden reference run and manifest verification
 └── tests/                         <- Regression shield (docs and pipeline behaviour)
     ├── __init__.py                <- Makes the test package importable
+    ├── test_assay.py              <- In vitro assay qualification and hit criteria
     ├── test_cli.py                <- Screening command contract
     ├── test_curation.py           <- Merge, dedupe, bins and CLI contract
     ├── test_docking.py            <- Docking ingestion and normalization
     ├── test_docs.py               <- Required docs and README tree paths
+    ├── test_golden.py             <- Golden reference pipeline verification
     ├── test_pipeline.py           <- End-to-end pipeline and manifest tests
     ├── test_rank.py               <- Consensus shortlist and CLI contract
     ├── test_rules.py              <- Rule boundaries
-    └── test_screen.py             <- Tiering, ranking and CSV ingestion
+    ├── test_screen.py             <- Tiering, ranking and CSV ingestion
+    └── test_target.py             <- Receptor profiles and Vina config generation
 ```
 
 ## Phase 2: Property Screening Pipeline
@@ -148,6 +163,42 @@ The run produces `curated_library.csv`, `ranked_compounds.csv`, `shortlist.csv`,
 `lead_report.md` (highlighting evidence gaps and G-001/G-002/G-003 limits), and
 `manifest.json` under schema `pnn.phase2.pipeline/1` with SHA-256 digests for all
 inputs and artifacts. Details are in [computational/lead_selection.md](computational/lead_selection.md).
+
+## Target Profiles & Vina Grid Generation
+
+`python -m pnn.target` codifies receptor structural invariants and exports AutoDock Vina grid configurations for primary targets (`PTPsigma`, `LAR`, `NgR1`, `MMP2`):
+
+```bash
+python -m pnn.target list
+python -m pnn.target show PTPsigma
+python -m pnn.target config PTPsigma --receptor receptor.pdbqt --out docked.pdbqt --save vina.conf
+```
+
+Details are in [computational/target_profiles.md](computational/target_profiles.md).
+
+## Phase 3: In Vitro Assay Qualification
+
+`python -m pnn.assay` ingests experimental PNN degradation data (DQ-CS/WFA EC50), BBB permeability (PAMPA Pe, MDCK-MDR1 efflux), and cytotoxicity counter-screens (CellTiter-Glo CC50, Selectivity Index) to qualify in silico leads into verified in vitro hits:
+
+```bash
+python -m pnn.assay \
+    --degradation data/assays/degradation_template.csv \
+    --permeability data/assays/permeability_template.csv \
+    --cytotoxicity data/assays/cytotoxicity_template.csv \
+    --out qualified_hits.csv \
+    --json assay_summary.json \
+    --report assay_report.md
+```
+
+Details are in [experimental/assay_pipeline.md](experimental/assay_pipeline.md).
+
+## Golden Run Verification
+
+To verify the end-to-end pipeline against realistic benchmark datasets in `data/`:
+
+```bash
+python tools/golden_run.py
+```
 
 ## Core Scientific Hypothesis
 Hypothalamic PNNs (primarily composed of chondroitin sulfate proteoglycans - CSPGs) create a physical and signaling barrier that:

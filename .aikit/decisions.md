@@ -40,3 +40,11 @@ contract, a dependency, a data format or the architecture; IDs are consecutive a
 - **Decision**: Ship `pnn.selection` and `python -m pnn.pipeline` to execute the full workflow in one atomic run: curate -> screen -> consensus rank. The run emits `curated_library.csv`, `ranked_compounds.csv`, `shortlist.csv`, a Markdown `lead_report.md` (highlighting evidence gaps and G-001/G-002/G-003 triage limits), and a `manifest.json` recording SHA-256 digests for all inputs, options, stage metrics and output artifacts under schema `pnn.phase2.pipeline/1`. Shared CSV formatting logic is centralized in `pnn/tables.py`.
 - **Consequences**: Lead selection is strictly reproducible, tamper-evident, and auditable across all stages. Memory is bounded by streaming SHA-256 digest computation. Triage disclaimers in generated reports prevent downstream overclaiming.
 
+### ADR-005: Target binding-pocket profiles and Phase 3 in vitro assay qualification pipeline
+- **Date**: 2026-10-24
+- **Status**: Accepted
+- **Context**: Virtual screening required codified receptor grid invariants for key PNN targets (PTPσ, LAR, NgR1, MMP2), and progression beyond in silico triage required an executable qualification engine to ingest experimental PNN degradation, BBB permeability, and cytotoxicity counter-screen data.
+- **Decision**: Introduce `pnn.target` defining receptor pocket invariants and AutoDock Vina grid configuration exports; ship benchmark libraries in `data/compounds/` and `data/docking/` with turnkey verification runner `tools/golden_run.py`; implement `pnn.assay` to ingest fluorogenic DQ-CS degradation (EC50, max %), PAMPA-BBB / MDCK-MDR1 permeability, and CellTiter-Glo cytotoxicity (CC50, Selectivity Index) to classify candidates into CONFIRMED_HIT, QUALIFIED_LEAD, CYTOTOXIC, or INACTIVE status with Markdown reporting honoring G-001.
+- **Consequences**: Structural invariants ensure reproducible receptor grid definitions, and in vitro assay datasets can be qualified objectively against standardized progression thresholds without third-party dependencies.
+
+
