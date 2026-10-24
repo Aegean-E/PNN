@@ -244,11 +244,126 @@ def generate_pk_curve_svg(
     return "\n".join(svg_parts)
 
 
+def generate_circuit_dynamics_svg(
+    simulation_points: Sequence[Mapping[str, object]],
+    width: int = 540,
+    height: int = 340,
+) -> str:
+    """Generate SVG time-course chart for hypothalamic circuit dynamics (PNN turnover vs pAKT restoration)."""
+    ml, mr, mt, mb = 60, 25, 30, 45
+    pw = width - ml - mr
+    ph = height - mt - mb
+
+    if not simulation_points:
+        return (
+            f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
+            f'<text x="{width/2:.1f}" y="{height/2:.1f}" text-anchor="middle" fill="#94a3b8">No simulation data</text></svg>'
+        )
+
+    parsed_pts: List[Tuple[float, float, float]] = []
+    for pt in simulation_points:
+        try:
+            t = float(pt.get("time_h", 0.0))
+            pnn = float(pt.get("pnn_density_pct", 100.0))
+            akt = float(pt.get("akt_signaling_pct", 45.0))
+            parsed_pts.append((t, pnn, akt))
+        except (ValueError, TypeError):
+            continue
+
+    if not parsed_pts:
+        return (
+            f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
+            f'<text x="{width/2:.1f}" y="{height/2:.1f}" text-anchor="middle" fill="#94a3b8">No valid simulation points</text></svg>'
+        )
+
+    parsed_pts.sort(key=lambda x: x[0])
+    max_t = max(parsed_pts[-1][0], 24.0)
+
+    def tx(t: float) -> float:
+        return ml + (t / max_t) * pw
+
+    def ty(pct: float) -> float:
+        clamped = max(0.0, min(pct, 120.0))
+        return mt + ph - (clamped / 120.0) * ph
+
+    svg_parts: List[str] = [
+        f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">',
+    ]
+
+    for y_val in (0, 25, 50, 75, 100):
+        y_pos = ty(float(y_val))
+        svg_parts.append(
+            f'  <line x1="{ml}" y1="{y_pos:.1f}" x2="{ml + pw}" y2="{y_pos:.1f}" stroke="#e2e8f0" stroke-width="1"/>'
+        )
+        svg_parts.append(
+            f'  <text x="{ml - 8}" y="{y_pos + 4:.1f}" text-anchor="end" font-size="10" fill="#64748b">{y_val}%</text>'
+        )
+
+    n_intervals = 7
+    for step in range(n_intervals + 1):
+        t_val = (max_t / n_intervals) * step
+        x_pos = tx(t_val)
+        svg_parts.append(
+            f'  <line x1="{x_pos:.1f}" y1="{mt}" x2="{x_pos:.1f}" y2="{mt + ph}" stroke="#e2e8f0" stroke-width="1"/>'
+        )
+        label = f"{t_val/24:.0f}d" if max_t >= 48 else f"{t_val:.0f}h"
+        svg_parts.append(
+            f'  <text x="{x_pos:.1f}" y="{mt + ph + 18}" text-anchor="middle" font-size="10" fill="#64748b">{label}</text>'
+        )
+
+    safety_y = ty(30.0)
+    svg_parts.append(
+        f'  <line x1="{ml}" y1="{safety_y:.1f}" x2="{ml + pw}" y2="{safety_y:.1f}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4"/>'
+    )
+    svg_parts.append(
+        f'  <text x="{ml + pw - 6}" y="{safety_y - 6:.1f}" text-anchor="end" font-size="9" fill="#ef4444" font-weight="600">30% PNN Safety Floor</text>'
+    )
+
+    svg_parts.append(f'  <line x1="{ml}" y1="{mt}" x2="{ml}" y2="{mt + ph}" stroke="#94a3b8" stroke-width="1.5"/>')
+    svg_parts.append(f'  <line x1="{ml}" y1="{mt + ph}" x2="{ml + pw}" y2="{mt + ph}" stroke="#94a3b8" stroke-width="1.5"/>')
+    svg_parts.append(
+        f'  <text x="{ml - 14}" y="{mt - 10}" text-anchor="start" font-size="10" font-weight="600" fill="#475569">% of Physiological Baseline</text>'
+    )
+    svg_parts.append(
+        f'  <text x="{ml + pw/2}" y="{height - 6}" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">Simulation Duration (Days post-initiation)</text>'
+    )
+
+    pnn_coords = [f"{tx(t):.1f},{ty(pnn):.1f}" for t, pnn, _ in parsed_pts]
+    svg_parts.append(
+        f'  <polyline points="{" ".join(pnn_coords)}" fill="none" stroke="#8b5cf6" stroke-width="2.5"/>'
+    )
+
+    akt_coords = [f"{tx(t):.1f},{ty(akt):.1f}" for t, _, akt in parsed_pts]
+    svg_parts.append(
+        f'  <polyline points="{" ".join(akt_coords)}" fill="none" stroke="#06b6d4" stroke-width="2.5"/>'
+    )
+
+    svg_parts.append(
+        f'  <line x1="{ml + 10}" y1="{mt + 10}" x2="{ml + 35}" y2="{mt + 10}" stroke="#8b5cf6" stroke-width="2.5"/>'
+    )
+    svg_parts.append(
+        f'  <text x="{ml + 40}" y="{mt + 14}" font-size="10" font-weight="600" fill="#475569">PNN Density (%)</text>'
+    )
+    svg_parts.append(
+        f'  <line x1="{ml + 140}" y1="{mt + 10}" x2="{ml + 165}" y2="{mt + 10}" stroke="#06b6d4" stroke-width="2.5"/>'
+    )
+    svg_parts.append(
+        f'  <text x="{ml + 170}" y="{mt + 14}" font-size="10" font-weight="600" fill="#475569">pAKT Signaling (%)</text>'
+    )
+
+    svg_parts.append("</svg>")
+    return "\n".join(svg_parts)
+
+
 def render_studio_html(
     compounds: Sequence[StudioCompound],
     radar_svg: str,
     heatmap_svg: str,
     pk_svg: str,
+    circuit_svg: Optional[str] = None,
+    dossier_data: Optional[Sequence[Mapping[str, object]]] = None,
+    safety_data: Optional[Sequence[Mapping[str, object]]] = None,
+    targets_data: Optional[Sequence[object]] = None,
 ) -> str:
     """Render full standalone HTML5 studio dashboard."""
     cards_html = []
@@ -275,6 +390,158 @@ def render_studio_html(
           </div>
         </div>
         """)
+
+    dossier_section = ""
+    if dossier_data:
+        dossier_rows = []
+        for row in dossier_data:
+            cid = html.escape(str(row.get("compound_id", "-")))
+            chem = html.escape(str(row.get("chemotype", "-")))
+            evid = html.escape(str(row.get("evidence_status", row.get("evidence", "-"))))
+            evid_cls = "badge-safe" if evid == "COMPLETE" else "badge-caution"
+            dose = html.escape(str(row.get("animal_dose_mg_kg", "-")))
+            hdose = html.escape(str(row.get("human_dose_mg_day", "-")))
+            ht12 = html.escape(str(row.get("human_t12_h", "-")))
+            mrsd = html.escape(str(row.get("mrsd_mg", "-")))
+            margin = html.escape(str(row.get("safety_margin", "-")))
+            dossier_rows.append(f"""
+            <tr>
+              <td><strong>{cid}</strong></td>
+              <td>{chem}</td>
+              <td><span class="{evid_cls}">{evid}</span></td>
+              <td>{dose} mg/kg</td>
+              <td>{hdose} mg</td>
+              <td>{ht12} h</td>
+              <td>{mrsd} mg</td>
+              <td><strong>{margin}</strong></td>
+            </tr>""")
+        dossier_section = f"""
+    <div class="panel" style="margin-bottom: 24px;">
+      <h2>Investigational New Drug (IND) & Translational Dossier <span class="badge badge-candidate">ICH M3(R2) / S7A / S7B</span></h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Compound ID</th>
+              <th>Chemotype</th>
+              <th>Evidence</th>
+              <th>Animal Dose</th>
+              <th>Projected Human Dose</th>
+              <th>Human t1/2</th>
+              <th>Phase 1 MRSD</th>
+              <th>Safety Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join(dossier_rows)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+        """
+
+    safety_section = ""
+    if safety_data:
+        safety_rows = []
+        for row in safety_data:
+            cid = html.escape(str(row.get("compound_id", "-")))
+            stat = html.escape(str(row.get("status", "-")))
+            stat_cls = "badge-safe" if stat == "SAFE_TO_PROGRESS" else ("badge-fail" if stat == "FAIL_SAFETY" else "badge-caution")
+            spec = html.escape(str(row.get("most_sensitive_species", "-")))
+            noael = html.escape(str(row.get("most_sensitive_noael_mg_kg", "-")))
+            herg = html.escape(str(row.get("herg_margin", "-")))
+            cyp = html.escape(str(row.get("cyp3a4_inhibition_pct", "-")))
+            geno = html.escape(str(row.get("genotoxicity", "-")))
+            geno_cls = "badge-safe" if geno == "NEGATIVE" else "badge-fail"
+            safety_rows.append(f"""
+            <tr>
+              <td><strong>{cid}</strong></td>
+              <td><span class="{stat_cls}">{stat}</span></td>
+              <td>{spec}</td>
+              <td>{noael} mg/kg</td>
+              <td>{herg}</td>
+              <td>{cyp}%</td>
+              <td><span class="{geno_cls}">{geno}</span></td>
+            </tr>""")
+        safety_section = f"""
+    <div class="panel" style="margin-bottom: 24px;">
+      <h2>IND-Enabling Safety Pharmacology & Repeat-Dose Toxicology <span class="badge badge-lead">ICH S7A/S7B Panel</span></h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Compound ID</th>
+              <th>Status</th>
+              <th>Sensitive Species</th>
+              <th>NOAEL</th>
+              <th>hERG Margin</th>
+              <th>CYP3A4 Inh.</th>
+              <th>Genotoxicity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join(safety_rows)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+        """
+
+    targets_section = ""
+    if targets_data:
+        target_rows = []
+        for t in targets_data:
+            tid = html.escape(str(getattr(t, "target_id", getattr(t, "get", lambda k, d="": d)("target_id", "-"))))
+            gene = html.escape(str(getattr(t, "gene_symbol", getattr(t, "get", lambda k, d="": d)("gene_symbol", "-"))))
+            pdb = html.escape(str(getattr(t, "primary_pdb", getattr(t, "get", lambda k, d="": d)("primary_pdb", "-"))))
+            res = html.escape(str(getattr(t, "resolution_angstrom", getattr(t, "get", lambda k, d="": d)("resolution_angstrom", "-"))))
+            ptype = html.escape(str(getattr(t, "pocket_type", getattr(t, "get", lambda k, d="": d)("pocket_type", "-"))))
+            drug = html.escape(str(getattr(t, "druggability", getattr(t, "get", lambda k, d="": d)("druggability", "-"))))
+            bio = html.escape(str(getattr(t, "biological_function", getattr(t, "get", lambda k, d="": d)("biological_function", "-"))))
+            target_rows.append(f"""
+            <tr>
+              <td><strong>{tid}</strong></td>
+              <td><code>{gene}</code></td>
+              <td><strong>{pdb}</strong></td>
+              <td>{res} Å</td>
+              <td>{ptype}</td>
+              <td>{drug}</td>
+              <td style="font-size:0.8rem; color:#94a3b8;">{bio}</td>
+            </tr>""")
+        targets_section = f"""
+    <div class="panel" style="margin-bottom: 24px;">
+      <h2>Receptor & Aggrecanase Target Invariants <span class="badge badge-candidate">{len(targets_data)} Registered Targets</span></h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Target ID</th>
+              <th>Gene Symbol</th>
+              <th>Primary PDB</th>
+              <th>Resolution</th>
+              <th>Pocket Type</th>
+              <th>Druggability</th>
+              <th>Biological Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join(target_rows)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+        """
+
+    circuit_section = ""
+    if circuit_svg:
+        circuit_section = f"""
+    <div class="panel" style="margin-bottom: 24px;">
+      <h2>Hypothalamic Circuit Dosing Dynamics (14-Day Pulsatile Regimen) <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">Purple: PNN Density (%) | Cyan: pAKT Signaling (%) | Red: 30% Safety Floor</span></h2>
+      <div class="svg-wrapper">
+        {circuit_svg}
+      </div>
+    </div>
+        """
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -392,6 +659,9 @@ def render_studio_html(
     }}
     .badge-candidate {{ background: #065f46; color: #6ee7b7; }}
     .badge-lead {{ background: #1e3a8a; color: #93c5fd; }}
+    .badge-safe {{ background: #065f46; color: #6ee7b7; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 9999px; text-transform: uppercase; }}
+    .badge-caution {{ background: #78350f; color: #fde68a; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 9999px; text-transform: uppercase; }}
+    .badge-fail {{ background: #7f1d1d; color: #fca5a5; font-weight: 700; font-size: 0.72rem; padding: 2px 7px; border-radius: 9999px; text-transform: uppercase; }}
     .lead-grid {{
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -406,6 +676,32 @@ def render_studio_html(
     }}
     .m-lbl {{ font-size: 0.7rem; color: var(--text-muted); }}
     .m-val {{ font-size: 0.88rem; font-weight: 600; color: #f8fafc; }}
+    .table-wrapper {{
+      overflow-x: auto;
+      margin-top: 10px;
+    }}
+    .data-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }}
+    .data-table th {{
+      background: #0f172a;
+      color: var(--primary);
+      padding: 10px 12px;
+      font-weight: 600;
+      border-bottom: 2px solid var(--surface-border);
+      white-space: nowrap;
+    }}
+    .data-table td {{
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--surface-border);
+      color: #cbd5e1;
+    }}
+    .data-table tr:hover {{
+      background: rgba(255, 255, 255, 0.03);
+    }}
     footer {{
       margin-top: 24px;
       padding-top: 16px;
@@ -421,10 +717,15 @@ def render_studio_html(
     <header>
       <div>
         <h1>PNN Discovery Studio & Preclinical Dashboard</h1>
-        <div class="subtitle">Phase 4 Perineuronal Net Degradation Candidate Triage & In Vivo PK/PD Profile</div>
+        <div class="subtitle">Phase 4-5 Perineuronal Net Degradation Candidate Triage & Translational Profile</div>
       </div>
       <div class="badge badge-candidate">Turnkey Interactive Report</div>
     </header>
+
+    <div style="margin-bottom: 24px; padding: 12px 16px; background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--primary); border-radius: 4px;">
+      <strong style="color: var(--primary);">Evidence Invariant (Guidelines G-001 & G-002):</strong>
+      In silico property screening, docking consensus scores, circuit ODE simulations, and allometric dose estimates represent prioritization hypotheses. Measured in vitro binding, CSPG degradation, animal PK/PD, and GLP toxicology are strictly required before clinical administration.
+    </div>
 
     <div class="funnel-container">
       <div class="funnel-card">
@@ -474,6 +775,14 @@ def render_studio_html(
         {pk_svg}
       </div>
     </div>
+
+    {circuit_section}
+
+    {dossier_section}
+
+    {safety_section}
+
+    {targets_section}
 
     <footer>
       PNN Project Preclinical Pipeline &bull; Standard Library Implementation &bull; Principles G-001, G-002, G-003 Compliant

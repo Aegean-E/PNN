@@ -3,13 +3,15 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
-# Ensure local 'pnn' package is importable when executed directly
+# Ensure local 'pnn' package is importable and working directory is anchored
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+os.chdir(ROOT)
 
 from pnn.runner import main
 

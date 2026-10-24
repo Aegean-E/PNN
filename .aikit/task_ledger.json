@@ -1,68 +1,16 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-hed-species-and-runner-fixes-v1",
+    "task_id": "pnn-studio-and-targets-v1",
     "last_phase": "phase 4",
-    "active_phase": 5,
-    "status": "completed",
-    "updated_at": 1792876546.131215,
-    "owner": "unidentified",
-    "started_by": "kilo:cli",
-    "continuations": [
-      {
-        "agent": "unidentified",
-        "from": "kilo:cli",
-        "at": 1792876546.131215
-      }
-    ],
-    "completed_at": 1792876550.2682753
+    "active_phase": 4,
+    "status": "in_progress",
+    "updated_at": 1792877469.589638,
+    "owner": "antigravity:a829958c",
+    "started_by": "antigravity:a829958c",
+    "continuations": []
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-one-click-and-mpo-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 129 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); one-click launcher and Phase 5 MPO engine verified; checklists: passed",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792859221.469135,
-      "timestamp_str": "2026-10-24 19:27:01"
-    },
-    {
-      "task_id": "pnn-one-click-and-mpo-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-one-click-and-mpo-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792859225.4382644,
-      "timestamp_str": "2026-10-24 19:27:05"
-    },
-    {
-      "task_id": "pnn-browser-ui-auto-open",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/3] Configure one-click start to launch browser UI automatically by default",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792859436.021215,
-      "timestamp_str": "2026-10-24 19:30:36",
-      "impact_assessment": {
-        "why": "One-click start (start.bat, start.sh, python run.py) previously required an explicit --open flag and start.bat was passing --no-browser, preventing the interactive visual studio dashboard from opening automatically upon launch.",
-        "benefits": "Double-clicking start.bat or executing python run.py now automatically launches the interactive studio dashboard in the default system web browser without manual flags.",
-        "risks": "contract: default CLI behavior opens browser unless --no-browser is provided; dependency: none, Python standard library webbrowser module; concurrency: none; state: no persistent state.",
-        "mitigation": "Preserve --no-browser flag for headless CI and automated unit testing."
-      }
-    },
-    {
-      "task_id": "pnn-browser-ui-auto-open",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 130 tests pass; 4/4 gates pass; one-click start launches browser UI automatically by default; checklists: passed",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792859517.8001437,
-      "timestamp_str": "2026-10-24 19:31:57"
-    },
     {
       "task_id": "pnn-browser-ui-auto-open",
       "phase": "completed",
@@ -255,6 +203,56 @@
       "timestamp": 1792876550.2682767,
       "timestamp_str": "2026-10-25 00:15:50",
       "agent": "unidentified"
+    },
+    {
+      "task_id": "pnn-studio-and-targets-v1",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/3] Expand target profiles with ADAMTS-4 and MMP-9; [2/3] Upgrade studio.html with IND, safety pharmacology, and circuit dynamics SVGs; [3/3] Anchor runner paths, verify Phase 4, record ADR-011",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792876893.3530178,
+      "timestamp_str": "2026-10-25 00:21:33",
+      "agent": "antigravity:a829958c",
+      "impact_assessment": {
+        "why": "User requested expanding the interactive studio dashboard with Phase 5 translational data and expanding target profiles with endogenous aggrecanases (ADAMTS-4 / MMP-9).",
+        "benefits": "Endogenous aggrecanase targets provide actionable mechanisms for PNN remodeling; studio.html surfaces complete preclinical-to-IND translational evidence in a unified interactive dashboard; runner is location-independent.",
+        "risks": "contract: target list expands with ADAMTS-4 and MMP-9, studio.html gains new SVG visualizations and scorecards, runner defaults resolve relative to project root; dependency: standard library only, zero external deps; concurrency: project workspace isolated; state: task ledger, codebase map and ADR-011 recorded.",
+        "mitigation": "Failing-first unit tests for targets and studio; regression testing across all 192+ tests; strict Phase 4 gate verification; no unmeasured data displayed without UNKNOWN/G-001 disclaimer."
+      }
+    },
+    {
+      "task_id": "pnn-studio-and-targets-v1",
+      "phase": "phase 3",
+      "phase_num": 3,
+      "description": "[1/3] done: added ADAMTS-4 and MMP-9 aggrecanase target profiles, Vina grids, and tests; 10/10 target tests pass",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792877003.1970956,
+      "timestamp_str": "2026-10-25 00:23:23",
+      "agent": "antigravity:a829958c"
+    },
+    {
+      "task_id": "pnn-studio-and-targets-v1",
+      "phase": "phase 3",
+      "phase_num": 3,
+      "description": "[2/3] done: upgraded studio.html with IND dossier, safety pharmacology, circuit dynamics SVG, and target invariants; anchored runner paths; 197/197 tests pass",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792877425.428189,
+      "timestamp_str": "2026-10-25 00:30:25",
+      "agent": "antigravity:a829958c"
+    },
+    {
+      "task_id": "pnn-studio-and-targets-v1",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "checklists: passed. Delivered endogenous aggrecanase target profiles (ADAMTS-4 and MMP-9), interactive studio.html translational integration (IND dossier, safety pharmacology, 14-day pulsatile circuit dynamics SVG, target invariants), and directory-independent turnkey runner. 197/197 tests pass, 4/4 gates pass (ADR-011).",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792877469.589638,
+      "timestamp_str": "2026-10-25 00:31:09",
+      "agent": "antigravity:a829958c"
     }
   ]
 }

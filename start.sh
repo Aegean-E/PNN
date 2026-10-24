@@ -4,6 +4,9 @@
 # ==============================================================================
 set -e
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$DIR"
+
 echo "[PNN] Starting PNN Perineuronal Net Drug Discovery Pipeline..."
 if command -v python3 &>/dev/null; then
     python3 run.py "$@"

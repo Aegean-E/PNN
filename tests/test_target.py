@@ -98,6 +98,32 @@ class TargetProfileTest(unittest.TestCase):
         self.assertIn("center_x = 12.500", text)
         self.assertIn("Saved Vina grid config", stdout)
 
+    def test_aggrecanase_targets_present(self) -> None:
+        targets = list_targets()
+        target_ids = {t.target_id for t in targets}
+        self.assertIn("ADAMTS4", target_ids)
+        self.assertIn("MMP9", target_ids)
+
+    def test_adamts4_target_profile(self) -> None:
+        adamts = get_target("ADAMTS4")
+        self.assertEqual(adamts.target_id, "ADAMTS4")
+        self.assertEqual(adamts.gene_symbol, "ADAMTS4")
+        self.assertEqual(adamts.primary_pdb, "2RJP")
+        self.assertEqual(adamts.uniprot_id, "O75173")
+        self.assertEqual(adamts.pocket_type, "catalytic_zinc")
+        self.assertIn("His202", adamts.key_residues)
+        self.assertIn("Glu203", adamts.key_residues)
+
+    def test_mmp9_target_profile(self) -> None:
+        mmp9 = get_target("MMP9")
+        self.assertEqual(mmp9.target_id, "MMP9")
+        self.assertEqual(mmp9.gene_symbol, "MMP9")
+        self.assertEqual(mmp9.primary_pdb, "1GKC")
+        self.assertEqual(mmp9.uniprot_id, "P14780")
+        self.assertEqual(mmp9.pocket_type, "catalytic_zinc")
+        self.assertIn("His401", mmp9.key_residues)
+        self.assertIn("Glu402", mmp9.key_residues)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -72,6 +72,7 @@ _EXPORTS = {
     "execute_turnkey_pipeline": ".runner",
     "extract_scaffold": ".sar",
     "generate_bioisosteres": ".bioisostere",
+    "generate_circuit_dynamics_svg": ".studio",
     "generate_trajectory_svg": ".dynamics",
     "generate_vina_config": ".target",
     "get_target": ".target",

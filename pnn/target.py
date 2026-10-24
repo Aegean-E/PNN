@@ -135,6 +135,42 @@ TARGET_PROFILES: Dict[str, TargetProfile] = {
             "small-molecule mimics target its catalytic cleft mechanism to achieve non-enzymatic cleavage."
         ),
     ),
+    "ADAMTS4": TargetProfile(
+        target_id="ADAMTS4",
+        name="ADAMTS-4 Aggrecanase-1",
+        gene_symbol="ADAMTS4",
+        uniprot_id="O75173",
+        primary_pdb="2RJP",
+        resolution_angstrom=1.5,
+        domain="Zinc Metalloproteinase Catalytic & Disintegrin Domain",
+        pocket_type="catalytic_zinc",
+        grid_center=(28.4, -12.1, 45.6),
+        grid_size=(20.0, 20.0, 20.0),
+        key_residues=("His202", "His206", "His212", "Glu203", "Leu165", "Phe198"),
+        druggability="High",
+        biological_function=(
+            "Endogenous CNS aggrecanase responsible for interglobular cleavage of CSPGs (aggrecan, brevican, "
+            "neurocan); allosteric activation or selective engagement induces physiological PNN softening."
+        ),
+    ),
+    "MMP9": TargetProfile(
+        target_id="MMP9",
+        name="Matrix Metalloproteinase-9 (92 kDa Gelatinase B)",
+        gene_symbol="MMP9",
+        uniprot_id="P14780",
+        primary_pdb="1GKC",
+        resolution_angstrom=2.3,
+        domain="Zinc Catalytic Domain with Fibronectin Type II Repeats",
+        pocket_type="catalytic_zinc",
+        grid_center=(38.2, 16.5, 24.8),
+        grid_size=(20.0, 20.0, 20.0),
+        key_residues=("His401", "His405", "His411", "Glu402", "Leu188", "Met422"),
+        druggability="High",
+        biological_function=(
+            "Activity-dependent synaptic matrix metalloproteinase in the hypothalamus; cleaves PNN CSPG components "
+            "and matrix scaffolds to restore insulin signaling and facilitate synaptic plasticity."
+        ),
+    ),
 }
 
 

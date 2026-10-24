@@ -8,9 +8,9 @@
 ## 📊 Codebase Metrics
 - **Total Python Modules**: `51`
 - **Total Classes**: `87`
-- **Total Top-Level Functions**: `205`
-- **Total Class Methods**: `229`
-- **Total Source Lines**: `12030`
+- **Total Top-Level Functions**: `206`
+- **Total Class Methods**: `234`
+- **Total Source Lines**: `12525`
 
 ---
 
@@ -19,7 +19,7 @@
 ### [`pnn/__init__.py`](pnn/__init__.py)
 > *Phase 2-5 discovery, preclinical and translational pipeline for PNN.*
 
-**Size**: `129` lines (`4271` bytes)
+**Size**: `130` lines (`4319` bytes)
 
 **Functions:**
 - `def __getattr__(name)`
@@ -376,7 +376,7 @@
 ### [`pnn/runner.py`](pnn/runner.py)
 > *One-click turnkey discovery pipeline runner for PNN.*
 
-**Size**: `430` lines (`17877` bytes)
+**Size**: `488` lines (`19183` bytes)
 
 **Classes:**
 - `class RunnerError` - *Raised when one-click pipeline runner cannot execute or find input data.*
@@ -495,7 +495,7 @@
 ### [`pnn/studio.py`](pnn/studio.py)
 > *Interactive Lead & Assay Visualization Studio and Standalone HTML Dashboard for PNN.*
 
-**Size**: `716` lines (`28104` bytes)
+**Size**: `1025` lines (`41172` bytes)
 
 **Classes:**
 - `class StudioError` - *Raised when studio inputs are malformed or missing required data.*
@@ -506,7 +506,8 @@
 - `def generate_radar_svg(compounds, width, height)` - *Generate SVG radar chart for CNS drug-likeness physicochemical properties.*
 - `def generate_docking_heatmap_svg(compounds, targets, cell_w, cell_h)` - *Generate multi-target docking affinity heatmap in SVG.*
 - `def generate_pk_curve_svg(compounds, width, height)` - *Generate in vivo pharmacokinetic concentration-time profiles SVG.*
-- `def render_studio_html(compounds, radar_svg, heatmap_svg, pk_svg)` - *Render full standalone HTML5 studio dashboard.*
+- `def generate_circuit_dynamics_svg(simulation_points, width, height)` - *Generate SVG time-course chart for hypothalamic circuit dynamics (PNN turnover vs pAKT restoration).*
+- `def render_studio_html(compounds, radar_svg, heatmap_svg, pk_svg, circuit_svg, dossier_data, safety_data, targets_data)` - *Render full standalone HTML5 studio dashboard.*
 - `def _parse_opt_float(val)` - *Parse optional numeric float string, returning None for empty or non-numeric cells.*
 - `def load_studio_data(compounds_path, docking_path, assays_path, pk_path, preclinical_candidates_path)` - *Assemble all project datasets into StudioCompound instances.*
 - `def build_parser()`
@@ -529,7 +530,7 @@
 ### [`pnn/target.py`](pnn/target.py)
 > *Target receptor profiles, binding-pocket invariants and Vina grid generation for PNN.*
 
-**Size**: `277` lines (`10623` bytes)
+**Size**: `313` lines (`12212` bytes)
 
 **Classes:**
 - `class TargetProfile` - *Molecular target profile defining receptor invariants and docking grid coordinates.*
@@ -546,7 +547,7 @@
 ### [`run.py`](run.py)
 > *Turnkey one-click entrypoint for the PNN perineuronal net drug discovery project.*
 
-**Size**: `17` lines (`440` bytes)
+**Size**: `19` lines (`476` bytes)
 
 ---
 
@@ -966,7 +967,7 @@
 ---
 
 ### [`tests/test_studio.py`](tests/test_studio.py)
-**Size**: `108` lines (`3819` bytes)
+**Size**: `171` lines (`6447` bytes)
 
 **Classes:**
 - `class TestStudioRendering`
@@ -975,6 +976,8 @@
   - Method `.test_generate_docking_heatmap_svg()`
   - Method `.test_generate_pk_curve_svg()`
   - Method `.test_render_studio_html()`
+  - Method `.test_generate_circuit_dynamics_svg()`
+  - Method `.test_render_studio_html_with_translational_panels()`
 - `class TestStudioDataLoader`
   - Method `.test_missing_compounds_file_raises()`
   - Method `.test_load_studio_data_valid()`
@@ -986,7 +989,7 @@
 ### [`tests/test_target.py`](tests/test_target.py)
 > *Unit and CLI tests for target receptor profiles and Vina grid generation.*
 
-**Size**: `103` lines (`3702` bytes)
+**Size**: `129` lines (`4857` bytes)
 
 **Classes:**
 - `class TargetProfileTest`
@@ -999,6 +1002,9 @@
   - Method `.test_cli_list()`
   - Method `.test_cli_show_success_and_failure()`
   - Method `.test_cli_config_export_to_file()`
+  - Method `.test_aggrecanase_targets_present()`
+  - Method `.test_adamts4_target_profile()`
+  - Method `.test_mmp9_target_profile()`
 
 ---
 

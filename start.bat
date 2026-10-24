@@ -3,6 +3,7 @@ REM ============================================================================
 REM PNN Discovery Pipeline - Turnkey One-Click Launcher (Windows)
 REM ==============================================================================
 title PNN Discovery Pipeline
+cd /d "%~dp0"
 
 echo [PNN] Starting PNN Perineuronal Net Drug Discovery Pipeline...
 python run.py %*

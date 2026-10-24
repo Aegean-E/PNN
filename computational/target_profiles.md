@@ -13,6 +13,8 @@
 | **`LAR`** | `PTPRF` | 2LAR | 1.9 | `catalytic` | Cys1522, Arg1528, Asp1490 | High |
 | **`NgR1`** | `RTN4R` | 2OZ7 | 2.4 | `allosteric_lrr` | Arg68, Asn115, Arg140 | Moderate |
 | **`MMP2`** | `MMP2` | 1CK7 | 1.5 | `catalytic` | His403, His407, His413, Glu404 | High |
+| **`MMP9`** | `MMP9` | 1GKC | 2.3 | `catalytic_zinc` | His401, His405, His411, Glu402 | High |
+| **`ADAMTS4`** | `ADAMTS4` | 2RJP | 1.5 | `catalytic_zinc` | His202, His206, His212, Glu203 | High |
 | **`ChABC`** | `PL8` | 1L5D | 1.8 | `catalytic` | His200, Tyr247, Arg287 | Moderate |
 
 ## CLI Usage

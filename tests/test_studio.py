@@ -5,6 +5,7 @@ from pathlib import Path
 from pnn.studio import (
     StudioCompound,
     StudioError,
+    generate_circuit_dynamics_svg,
     generate_docking_heatmap_svg,
     generate_pk_curve_svg,
     generate_radar_svg,
@@ -12,6 +13,7 @@ from pnn.studio import (
     main,
     render_studio_html,
 )
+from pnn.target import list_targets
 
 
 class TestStudioRendering(unittest.TestCase):
@@ -64,6 +66,67 @@ class TestStudioRendering(unittest.TestCase):
         self.assertIn("PNN Discovery Studio", html_doc)
         self.assertIn("PNN-101", html_doc)
         self.assertIn("24.0 nM", html_doc)
+
+    def test_generate_circuit_dynamics_svg(self) -> None:
+        sim_points = [
+            {"time_h": 0.0, "pnn_density_pct": 100.0, "akt_signaling_pct": 45.0},
+            {"time_h": 24.0, "pnn_density_pct": 55.0, "akt_signaling_pct": 78.0},
+            {"time_h": 72.0, "pnn_density_pct": 42.0, "akt_signaling_pct": 92.0},
+            {"time_h": 336.0, "pnn_density_pct": 60.0, "akt_signaling_pct": 85.0},
+        ]
+        svg = generate_circuit_dynamics_svg(sim_points)
+        self.assertIn("<svg", svg)
+        self.assertIn("</svg>", svg)
+        self.assertIn("PNN Density", svg)
+        self.assertIn("pAKT", svg)
+        self.assertIn("<polyline", svg)
+
+    def test_render_studio_html_with_translational_panels(self) -> None:
+        r_svg = generate_radar_svg([self.compound])
+        h_svg = generate_docking_heatmap_svg([self.compound], targets=["PTPsigma"])
+        p_svg = generate_pk_curve_svg([self.compound])
+        c_svg = generate_circuit_dynamics_svg([
+            {"time_h": 0.0, "pnn_density_pct": 100.0, "akt_signaling_pct": 45.0},
+            {"time_h": 168.0, "pnn_density_pct": 45.0, "akt_signaling_pct": 88.0},
+        ])
+        dossier_data = [
+            {
+                "compound_id": "PNN-REP-01",
+                "chemotype": "Trodusquemine-Analog",
+                "human_dose_mg_day": "48.6",
+                "human_t12_h": "17.0",
+                "mrsd_mg": "58.38",
+                "safety_margin": "6.0x",
+                "evidence_status": "COMPLETE",
+            }
+        ]
+        safety_data = [
+            {
+                "compound_id": "PNN-REP-01",
+                "status": "SAFE_TO_PROGRESS",
+                "herg_margin": "125.0x",
+                "cyp3a4_inhibition_pct": "8.0",
+                "genotoxicity": "NEGATIVE",
+                "most_sensitive_species": "rat",
+                "most_sensitive_noael_mg_kg": "60.0",
+            }
+        ]
+        html_doc = render_studio_html(
+            [self.compound],
+            radar_svg=r_svg,
+            heatmap_svg=h_svg,
+            pk_svg=p_svg,
+            circuit_svg=c_svg,
+            dossier_data=dossier_data,
+            safety_data=safety_data,
+            targets_data=list_targets(),
+        )
+        self.assertIn("Investigational New Drug (IND)", html_doc)
+        self.assertIn("Safety Pharmacology", html_doc)
+        self.assertIn("Hypothalamic Circuit Dosing Dynamics", html_doc)
+        self.assertIn("ADAMTS4", html_doc)
+        self.assertIn("MMP9", html_doc)
+        self.assertIn("Trodusquemine-Analog", html_doc)
 
 
 class TestStudioDataLoader(unittest.TestCase):

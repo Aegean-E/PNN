@@ -59,12 +59,16 @@ from .sar import (
 )
 from .selection import render_lead_report, select_leads
 from .studio import (
+    generate_circuit_dynamics_svg,
     generate_docking_heatmap_svg,
     generate_pk_curve_svg,
     generate_radar_svg,
     load_studio_data,
     render_studio_html,
 )
+from .target import list_targets
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class RunnerError(ValueError):
@@ -189,29 +193,7 @@ def execute_turnkey_pipeline(
     sar_report = render_sar_report(compounds_sar, clusters)
     write_text(out_dir / "sar_report.md", sar_report)
 
-    # 5. Interactive Visualization Studio HTML Dashboard
-    studio_compounds, targets = load_studio_data(
-        compounds_path=vendor_csv,
-        docking_path=docking_csv,
-        assays_path=degradation_csv,
-        pk_path=pk_csv,
-        preclinical_candidates_path=candidates_csv,
-    )
-
-    radar_svg = generate_radar_svg(studio_compounds)
-    heatmap_svg = generate_docking_heatmap_svg(studio_compounds[:7], targets)
-    pk_svg = generate_pk_curve_svg(studio_compounds)
-
-    html_out = render_studio_html(studio_compounds, radar_svg, heatmap_svg, pk_svg)
-    studio_html = out_dir / "studio.html"
-    write_text(studio_html, html_out)
-
-    # Optionally emit turnkey root studio.html for zero-friction access
-    if emit_root:
-        root_studio = Path("studio.html")
-        write_text(root_studio, html_out)
-
-    # 6. Advanced Translational Capabilities (IND Dossier, Bioisosteres, Pathway ODE, MD Dynamics)
+    # 5. Advanced Translational Capabilities (IND Dossier, Bioisosteres, Pathway ODE, MD Dynamics)
     lead_id = candidates[0].compound_id if candidates else "PNN-101"
     library_paths = [vendor_csv]
     if repurposing_csv and repurposing_csv.is_file():
@@ -231,6 +213,8 @@ def execute_turnkey_pipeline(
     if analogs_count == 0:
         # Record the stage outcome instead of silently omitting the artifact.
         write_text(out_dir / "bioisostere_report.md", render_bioisostere_report([], lead_id))
+
+    projections: list = []
     lead_pk: dict[str, float] = {}
     if pk_csv and pk_csv.is_file():
         try:
@@ -263,6 +247,7 @@ def execute_turnkey_pipeline(
             pass
 
     # Simulate only the measured efficacious dose; an unmeasured dose is never substituted.
+    p_points: list = []
     pathway_dose = lead_pk.get("dose_mg_kg")
     if pathway_dose is None and lead_id in pd_outcomes:
         pathway_dose = pd_outcomes[lead_id].dose_mg_kg
@@ -276,17 +261,18 @@ def execute_turnkey_pipeline(
         except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
             pass
 
-    traj_template = Path("data/dynamics/ptpsigma_md_trajectory_template.csv")
+    traj_template = PROJECT_ROOT / "data/dynamics/ptpsigma_md_trajectory_template.csv"
     if traj_template.is_file():
         try:
             run_dynamics_pipeline(traj_template, compound_id=lead_id, target_id="PTPsigma", out_dir=out_dir)
         except (ValueError, KeyError, OSError):  # hygiene: allow non-critical translational step exception
             pass
 
-    # 7. IND-Enabling Safety Pharmacology and Repeat-Dose Toxicology Package
+    # 6. IND-Enabling Safety Pharmacology and Repeat-Dose Toxicology Package
     safety_assessed_count = 0
     safety_safe_count = 0
     safety_failed_count = 0
+    assessments: list = []
     try:
         tox_studies = load_tox_studies(tox_csv) if tox_csv and tox_csv.is_file() else []
         safety_pharm = (
@@ -308,6 +294,45 @@ def execute_turnkey_pipeline(
         safety_assessed_count = 0
         safety_safe_count = 0
         safety_failed_count = 0
+
+    # 7. Interactive Visualization Studio HTML Dashboard (Comprehensive Preclinical & Translational UI)
+    studio_compounds, targets = load_studio_data(
+        compounds_path=vendor_csv,
+        docking_path=docking_csv,
+        assays_path=degradation_csv,
+        pk_path=pk_csv,
+        preclinical_candidates_path=candidates_csv,
+    )
+
+    radar_svg = generate_radar_svg(studio_compounds)
+    heatmap_svg = generate_docking_heatmap_svg(studio_compounds[:7], targets)
+    pk_svg = generate_pk_curve_svg(studio_compounds)
+
+    circuit_svg = (
+        generate_circuit_dynamics_svg([p.as_row() for p in p_points])
+        if p_points
+        else None
+    )
+    dossier_rows = [p.as_row() for p in projections] if projections else None
+    safety_rows = [a.as_row() for a in assessments] if assessments else None
+
+    html_out = render_studio_html(
+        studio_compounds,
+        radar_svg=radar_svg,
+        heatmap_svg=heatmap_svg,
+        pk_svg=pk_svg,
+        circuit_svg=circuit_svg,
+        dossier_data=dossier_rows,
+        safety_data=safety_rows,
+        targets_data=list_targets(),
+    )
+    studio_html = out_dir / "studio.html"
+    write_text(studio_html, html_out)
+
+    # Optionally emit turnkey root studio.html for zero-friction access
+    if emit_root:
+        root_studio = PROJECT_ROOT / "studio.html"
+        write_text(root_studio, html_out)
 
     elapsed = time.perf_counter() - start_time
     clinical_count = sum(1 for c in candidates if c.status == "CLINICAL_CANDIDATE")
@@ -361,23 +386,55 @@ def build_parser() -> argparse.ArgumentParser:
         prog="python -m pnn.run",
         description="One-click execution of the entire PNN perineuronal net drug discovery pipeline.",
     )
-    parser.add_argument("--vendor", default="data/compounds/vendor_library.csv", help="vendor screening library CSV")
-    parser.add_argument("--repurposing", default="data/compounds/repurposing_library.csv", help="repurposing library CSV")
-    parser.add_argument("--docking", default="data/docking/multi_target_scores.csv", help="multi-target docking CSV")
-    parser.add_argument("--degradation", default="data/assays/degradation_template.csv", help="DQ-CS degradation assay CSV")
-    parser.add_argument("--permeability", default="data/assays/permeability_template.csv", help="PAMPA/MDCK permeability CSV")
-    parser.add_argument("--cytotoxicity", default="data/assays/cytotoxicity_template.csv", help="CellTiter-Glo cytotoxicity CSV")
-    parser.add_argument("--pk", default="data/preclinical/pk_timecourse_template.csv", help="in vivo PK time series CSV")
-    parser.add_argument("--pd", default="data/preclinical/pd_metabolic_template.csv", help="in vivo PD outcomes CSV")
+    parser.add_argument(
+        "--vendor",
+        default=str(PROJECT_ROOT / "data/compounds/vendor_library.csv"),
+        help="vendor screening library CSV",
+    )
+    parser.add_argument(
+        "--repurposing",
+        default=str(PROJECT_ROOT / "data/compounds/repurposing_library.csv"),
+        help="repurposing library CSV",
+    )
+    parser.add_argument(
+        "--docking",
+        default=str(PROJECT_ROOT / "data/docking/multi_target_scores.csv"),
+        help="multi-target docking CSV",
+    )
+    parser.add_argument(
+        "--degradation",
+        default=str(PROJECT_ROOT / "data/assays/degradation_template.csv"),
+        help="DQ-CS degradation assay CSV",
+    )
+    parser.add_argument(
+        "--permeability",
+        default=str(PROJECT_ROOT / "data/assays/permeability_template.csv"),
+        help="PAMPA/MDCK permeability CSV",
+    )
+    parser.add_argument(
+        "--cytotoxicity",
+        default=str(PROJECT_ROOT / "data/assays/cytotoxicity_template.csv"),
+        help="CellTiter-Glo cytotoxicity CSV",
+    )
+    parser.add_argument(
+        "--pk",
+        default=str(PROJECT_ROOT / "data/preclinical/pk_timecourse_template.csv"),
+        help="in vivo PK time series CSV",
+    )
+    parser.add_argument(
+        "--pd",
+        default=str(PROJECT_ROOT / "data/preclinical/pd_metabolic_template.csv"),
+        help="in vivo PD outcomes CSV",
+    )
     parser.add_argument(
         "--tox",
-        default="data/toxicology/repeat_dose_tox_template.csv",
+        default=str(PROJECT_ROOT / "data/toxicology/repeat_dose_tox_template.csv"),
         help="repeat-dose toxicology NOAEL/LOAEL CSV",
     )
     parser.add_argument(
         "--safety-pharm",
         dest="safety_pharm",
-        default="data/toxicology/safety_pharmacology_template.csv",
+        default=str(PROJECT_ROOT / "data/toxicology/safety_pharmacology_template.csv"),
         help="hERG/CYP/genotoxicity safety pharmacology CSV",
     )
     parser.add_argument("--out-dir", default="output", help="destination directory for all generated artifacts")
@@ -389,6 +446,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        resolved_out = Path(args.out_dir)
         summary = execute_turnkey_pipeline(
             vendor_csv=Path(args.vendor),
             repurposing_csv=Path(args.repurposing) if args.repurposing else None,
@@ -398,8 +456,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             cytotoxicity_csv=Path(args.cytotoxicity) if args.cytotoxicity else None,
             pk_csv=Path(args.pk) if args.pk else None,
             pd_csv=Path(args.pd) if args.pd else None,
-            out_dir=Path(args.out_dir),
-            emit_root=(Path(args.out_dir) == Path("output")),
+            out_dir=resolved_out,
+            emit_root=(resolved_out.resolve() == (PROJECT_ROOT / "output").resolve() or resolved_out == Path("output")),
             tox_csv=Path(args.tox) if args.tox else None,
             safety_pharm_csv=Path(args.safety_pharm) if args.safety_pharm else None,
         )
