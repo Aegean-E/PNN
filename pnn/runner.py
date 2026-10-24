@@ -231,8 +231,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pk", default="data/preclinical/pk_timecourse_template.csv", help="in vivo PK time series CSV")
     parser.add_argument("--pd", default="data/preclinical/pd_metabolic_template.csv", help="in vivo PD outcomes CSV")
     parser.add_argument("--out-dir", default="output", help="destination directory for all generated artifacts")
-    parser.add_argument("--open", dest="open_browser", action="store_true", help="open studio.html in web browser on finish")
-    parser.add_argument("--no-browser", dest="no_browser", action="store_true", help="suppress opening browser")
+    parser.add_argument("--open", dest="open_browser", action="store_true", help="explicitly enable browser launch (enabled by default)")
+    parser.add_argument("--no-browser", dest="no_browser", action="store_true", help="suppress automatically opening studio.html in browser")
     return parser
 
 
@@ -249,14 +249,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             pk_csv=Path(args.pk) if args.pk else None,
             pd_csv=Path(args.pd) if args.pd else None,
             out_dir=Path(args.out_dir),
+            emit_root=(Path(args.out_dir) == Path("output")),
         )
         print_run_banner(summary)
 
-        if args.open_browser and not args.no_browser:
+        if not args.no_browser:
+            target_url = summary.studio_html_path.resolve().as_uri()
             try:
-                webbrowser.open_new_tab(summary.studio_html_path.resolve().as_uri())
+                webbrowser.open_new_tab(target_url)
             except Exception as exc:  # hygiene: allow non-critical desktop browser launch
-                print(f"[Notice] Could not launch browser: {exc}", file=sys.stderr)
+                print(f"[Notice] Could not launch browser ({exc}). Open dashboard manually: {target_url}", file=sys.stderr)
 
     except RunnerError as exc:
         print(f"What: {exc}", file=sys.stderr)

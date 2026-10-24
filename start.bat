@@ -5,7 +5,7 @@ REM ============================================================================
 title PNN Discovery Pipeline
 
 echo [PNN] Starting PNN Perineuronal Net Drug Discovery Pipeline...
-python run.py --no-browser %*
+python run.py %*
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
@@ -15,5 +15,5 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [PNN] Turnkey execution succeeded! Dashboard generated at studio.html
+echo [PNN] Turnkey execution succeeded! Dashboard opened in your web browser.
 pause

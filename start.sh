@@ -6,9 +6,9 @@ set -e
 
 echo "[PNN] Starting PNN Perineuronal Net Drug Discovery Pipeline..."
 if command -v python3 &>/dev/null; then
-    python3 run.py --no-browser "$@"
+    python3 run.py "$@"
 else
-    python run.py --no-browser "$@"
+    python run.py "$@"
 fi
 
-echo "[PNN] Turnkey execution succeeded! Dashboard generated at studio.html"
+echo "[PNN] Turnkey execution succeeded! Dashboard opened in your web browser."

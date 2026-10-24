@@ -1,49 +1,14 @@
 {
   "version": 1,
   "active_task": {
-    "task_id": "pnn-one-click-and-mpo-v1",
+    "task_id": "pnn-browser-ui-auto-open",
     "last_phase": "phase 4",
     "active_phase": 5,
     "status": "completed",
-    "updated_at": 1792859221.469135,
-    "completed_at": 1792859225.4382627
+    "updated_at": 1792859517.8001437,
+    "completed_at": 1792859523.5337894
   },
   "checkpoints": [
-    {
-      "task_id": "pnn-phase2-review-delivery",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Review: rejected non-finite/negative/fractional inputs, unknown charge to UNKNOWN, atomic temp cleanup, full output columns; 32 tests pass; checklists: passed.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792696379.3908808,
-      "timestamp_str": "2026-10-22 22:12:59"
-    },
-    {
-      "task_id": "pnn-phase2-review-delivery",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-phase2-review-delivery' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792696408.7108607,
-      "timestamp_str": "2026-10-22 22:13:28"
-    },
-    {
-      "task_id": "pnn-phase2-docking-ranker",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Add a docking-result consensus ranker: CSV contract, normalized multi-target scoring, screening-tier join, CLI, tests and docs.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792697014.6325796,
-      "timestamp_str": "2026-10-22 22:23:34",
-      "impact_assessment": {
-        "why": "Phase 2 property triage now produces candidates, but the documented Vina/Glide/MM-GBSA consensus workflow has no executable aggregation step.",
-        "benefits": "Turns heterogeneous per-target docking outputs into one transparent, reproducible shortlist and prevents ranking by raw scores from incomparable engines.",
-        "risks": "contract: new docking CSV and shortlist schema; dependency: none, standard library only; concurrency: reports are written atomically; state: no persisted state beyond generated reports.",
-        "mitigation": "Document the contract and normalization limits, require Vina as the primary score, expose coverage, and cover normalization, filters and joins with tests."
-      }
-    },
     {
       "task_id": "pnn-phase2-docking-ranker",
       "phase": "phase 4",
@@ -237,6 +202,41 @@
       "status": "completed",
       "timestamp": 1792859225.4382644,
       "timestamp_str": "2026-10-24 19:27:05"
+    },
+    {
+      "task_id": "pnn-browser-ui-auto-open",
+      "phase": "phase 2",
+      "phase_num": 2,
+      "description": "[1/3] Configure one-click start to launch browser UI automatically by default",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792859436.021215,
+      "timestamp_str": "2026-10-24 19:30:36",
+      "impact_assessment": {
+        "why": "One-click start (start.bat, start.sh, python run.py) previously required an explicit --open flag and start.bat was passing --no-browser, preventing the interactive visual studio dashboard from opening automatically upon launch.",
+        "benefits": "Double-clicking start.bat or executing python run.py now automatically launches the interactive studio dashboard in the default system web browser without manual flags.",
+        "risks": "contract: default CLI behavior opens browser unless --no-browser is provided; dependency: none, Python standard library webbrowser module; concurrency: none; state: no persistent state.",
+        "mitigation": "Preserve --no-browser flag for headless CI and automated unit testing."
+      }
+    },
+    {
+      "task_id": "pnn-browser-ui-auto-open",
+      "phase": "phase 4",
+      "phase_num": 4,
+      "description": "[4/4] Verification: 130 tests pass; 4/4 gates pass; one-click start launches browser UI automatically by default; checklists: passed",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1792859517.8001437,
+      "timestamp_str": "2026-10-24 19:31:57"
+    },
+    {
+      "task_id": "pnn-browser-ui-auto-open",
+      "phase": "completed",
+      "phase_num": 5,
+      "description": "Task 'pnn-browser-ui-auto-open' completed successfully.",
+      "status": "completed",
+      "timestamp": 1792859523.5337913,
+      "timestamp_str": "2026-10-24 19:32:03"
     }
   ]
 }

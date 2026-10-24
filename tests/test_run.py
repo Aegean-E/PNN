@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from pnn.runner import (
     RunnerError,
@@ -64,12 +65,22 @@ class TestTurnkeyRunner(unittest.TestCase):
             # Verify banner printing without UnicodeEncodeError
             print_run_banner(summary)
 
-    def test_runner_cli_execution(self) -> None:
+    def test_runner_cli_execution_no_browser(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_dir = Path(tmp_dir) / "run_out"
             rc = main(["--no-browser", "--out-dir", str(out_dir)])
             self.assertEqual(rc, 0)
             self.assertTrue((out_dir / "studio.html").is_file())
+
+    @patch("webbrowser.open_new_tab")
+    def test_runner_cli_execution_auto_opens_browser(self, mock_open) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_dir = Path(tmp_dir) / "run_out"
+            rc = main(["--out-dir", str(out_dir)])
+            self.assertEqual(rc, 0)
+            self.assertTrue(mock_open.called)
+            call_arg = mock_open.call_args[0][0]
+            self.assertIn("studio.html", call_arg)
 
 
 if __name__ == "__main__":

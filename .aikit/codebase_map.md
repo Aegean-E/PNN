@@ -9,8 +9,8 @@
 - **Total Python Modules**: `40`
 - **Total Classes**: `64`
 - **Total Top-Level Functions**: `147`
-- **Total Class Methods**: `157`
-- **Total Source Lines**: `7977`
+- **Total Class Methods**: `158`
+- **Total Source Lines**: `7990`
 
 ---
 
@@ -271,7 +271,7 @@
 ### [`pnn/runner.py`](pnn/runner.py)
 > *One-click turnkey discovery pipeline runner for PNN.*
 
-**Size**: `276` lines (`11085` bytes)
+**Size**: `278` lines (`11242` bytes)
 
 **Classes:**
 - `class RunnerError` - *Raised when one-click pipeline runner cannot execute or find input data.*
@@ -647,13 +647,14 @@
 ---
 
 ### [`tests/test_run.py`](tests/test_run.py)
-**Size**: `76` lines (`3069` bytes)
+**Size**: `87` lines (`3566` bytes)
 
 **Classes:**
 - `class TestTurnkeyRunner`
   - Method `.test_missing_vendor_library_raises()`
   - Method `.test_execute_turnkey_pipeline_success()`
-  - Method `.test_runner_cli_execution()`
+  - Method `.test_runner_cli_execution_no_browser()`
+  - Method `.test_runner_cli_execution_auto_opens_browser(mock_open)`
 
 ---
 
