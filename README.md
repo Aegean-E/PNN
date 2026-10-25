@@ -32,6 +32,7 @@ Oral, blood-brain barrier-penetrant agents that soften hypothalamic perineuronal
 PNN/
 ├── README.md                      <- This file - project overview
 ├── .gitignore                     <- AIKit transient-state baseline
+├── COMMERCIAL.md
 ├── literature_review.md           <- Comprehensive literature findings
 ├── research_framework.md          <- Methodology & experimental design
 ├── run.py                         <- One-click turnkey pipeline entrypoint
