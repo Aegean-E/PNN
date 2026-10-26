@@ -90,3 +90,9 @@ contract, a dependency, a data format or the architecture; IDs are consecutive a
 - **Context**: (1) Target profiling in pnn.target covered PTPsigma, LAR, NgR1, MMP-2 and ChABC, but lacked the principal endogenous CNS aggrecanases (ADAMTS-4 and MMP-9) responsible for physiological CSPG interglobular cleavage. (2) studio.html displayed only Phase 2/3/4 metrics (radar, docking heatmap, PK curves), omitting the Phase 5 translational IND candidate dossier, ICH S7A/S7B safety pharmacology scorecard, and 14-day hypothalamic circuit dynamics simulation. (3) pnn.runner, run.py, and one-click shell scripts assumed data/ was in the current working directory, failing when invoked outside projects/PNN.
 - **Decision**: (1) Add ADAMTS4 (PDB 2RJP, zinc catalytic domain with S1\' pocket) and MMP9 (PDB 1GKC, gelatinase catalytic domain) invariants, key catalytic residues, and Vina grid exports to pnn.target. (2) Add generate_circuit_dynamics_svg and extend render_studio_html in pnn.studio to surface IND scaling comparisons, safety pharmacology evaluations, target invariants, and 14-day pulsatile circuit dynamics in studio.html while strictly preserving G-001/G-002 triage disclaimers. (3) Anchor default data paths to PROJECT_ROOT across runner.py, run.py, start.bat, and start.sh so execution is location-independent.
 - **Consequences**: Discovery workflows evaluate endogenous aggrecanase mechanisms directly, and all preclinical-to-IND translational evidence is unified into an offline-ready HTML5 dashboard. Default paths resolve cleanly from any working directory or desktop launcher.
+
+## Licensing migration (first license)
+
+- New versions use the Aegean Science License 1.1 (ASL-1.1).
+- Rights holder: AegeanWorks; commercial use under ACL-1.0.
+- Counsel review of the 1.1 texts remains pending.

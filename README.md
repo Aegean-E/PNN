@@ -402,3 +402,7 @@ References live in `data/literature/references.bib` (BibTeX), tagged `#PNN_struc
 *Last Updated: 2026-10-24*
 *Version: 1.5.0*
 *Compatible with AI cold starts*
+
+## 📜 License
+
+Free for non-commercial research and teaching under the Aegean Science License 1.1 (ASL-1.1); see [LICENSE](LICENSE). It allows publication, reproducibility sharing, text/data mining and non-commercial ML training. Commercial or industry-sponsored use needs the Aegean Commercial License 1.0 (ACL-1.0); see [COMMERCIAL.md](COMMERCIAL.md).
