@@ -15,6 +15,7 @@
   "ui_source": "detected",
   "topics": [
     "aikit",
+    "aikit-integrated",
     "source-available",
     "aegean-science-license",
     "research",
@@ -32,8 +33,7 @@
     "bioinformatics",
     "biology",
     "systems-biology",
-    "drug-repurposing",
-    "metabolic-syndrome"
+    "drug-repurposing"
   ],
   "topics_source": "ai:kilo:2026-10-27",
   "topics_reviewed_at": "2026-10-28",
