@@ -1,7 +1,7 @@
 # PNN Project: Oral BBB-Penetrant Agents for Hypothalamic PNN Softening
 
 <!-- aegean:media:start -->
-<p align="center"><img src="assets/logo.png" alt="PNN logo" width="96" height="96"></p>
+<p align="center"><img src="assets/logo.jpg" alt="PNN logo" width="96" height="96"></p>
 <p align="center"><img src="assets/social-preview.png" alt="PNN social preview" width="100%"></p>
 <!-- aegean:media:end -->
 
