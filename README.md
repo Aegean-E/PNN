@@ -1,8 +1,8 @@
 # PNN Project: Oral BBB-Penetrant Agents for Hypothalamic PNN Softening
 
 <!-- aegean:media:start -->
-<p align="center"><img src="assets/logo.svg" alt="PNN logo" width="96" height="96"></p>
-<p align="center"><img src="assets/social-preview.svg" alt="PNN social preview" width="100%"></p>
+<p align="center"><img src="assets/logo.png" alt="PNN logo" width="96" height="96"></p>
+<p align="center"><img src="assets/social-preview.png" alt="PNN social preview" width="100%"></p>
 <!-- aegean:media:end -->
 
 Oral, blood-brain barrier-penetrant agents that soften hypothalamic perineuronal nets to restore insulin signaling in obesity.
