@@ -1,5 +1,10 @@
 # PNN Project: Oral BBB-Penetrant Agents for Hypothalamic PNN Softening
 
+<!-- aegean:media:start -->
+<p align="center"><img src="assets/logo.svg" alt="PNN logo" width="96" height="96"></p>
+<p align="center"><img src="assets/social-preview.svg" alt="PNN social preview" width="100%"></p>
+<!-- aegean:media:end -->
+
 Oral, blood-brain barrier-penetrant agents that soften hypothalamic perineuronal nets to restore insulin signaling in obesity.
 
 ## ⚡ 30-Second Cold-Start Quick Reference
@@ -406,3 +411,11 @@ References live in `data/literature/references.bib` (BibTeX), tagged `#PNN_struc
 ## 📜 License
 
 Free for non-commercial research and teaching under the Aegean Science License 1.1 (ASL-1.1); see [LICENSE](LICENSE). It allows publication, reproducibility sharing, text/data mining and non-commercial ML training. Commercial or industry-sponsored use needs the Aegean Commercial License 1.0 (ACL-1.0); see [COMMERCIAL.md](COMMERCIAL.md).
+
+<!-- aegean:screenshots:start -->
+## Screenshots
+
+<a href="https://github.com/AegeanWorks/PNN/commit/70d7c48"><img src="assets/screenshots/2026-10-28-studio.png" alt="PNN interface at 2026-10-28"></a>
+
+*PNN interface captured from C:\Users\Yunus-Emre\Desktop\portable_agent_kit\projects\PNN\studio.html* · commit `70d7c48` · 2026-10-28
+<!-- aegean:screenshots:end -->

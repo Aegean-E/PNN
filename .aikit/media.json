@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "name": "PNN",
+  "repo": "PNN",
+  "has_ui": true,
+  "ui_kind": "web",
+  "palette": [
+    "#07111f",
+    "#0e2a47",
+    "#34d399",
+    "#e2f8ff"
+  ],
+  "assets": {
+    "logo": {
+      "path": "assets/logo.svg",
+      "status": "approved",
+      "commit": "",
+      "generated_at": "2026-10-28T08:02:17",
+      "review": {
+        "status": "approved",
+        "reviewer": "subagent:vision-review",
+        "method": "vision",
+        "notes": "PN monogram in green, dark background, subtitle readable.",
+        "score": 94,
+        "reviewed_at": "2026-10-28T08:10:42"
+      }
+    },
+    "social_preview": {
+      "path": "assets/social-preview.svg",
+      "status": "approved",
+      "commit": "",
+      "generated_at": "2026-10-28T08:02:17",
+      "review": {
+        "status": "approved",
+        "reviewer": "subagent:vision-review",
+        "method": "vision",
+        "notes": "PN icon, title, blood-brain-barrier agents description, WEB tag, green.",
+        "score": 94,
+        "reviewed_at": "2026-10-28T08:10:42"
+      }
+    },
+    "social_preview_png": {
+      "path": "assets/social-preview.png",
+      "status": "pending_review",
+      "commit": "",
+      "generated_at": "2026-10-28T08:02:18",
+      "review": null
+    }
+  },
+  "screenshots": [
+    {
+      "path": "assets/screenshots/2026-10-28-studio.png",
+      "alt": "PNN interface at 2026-10-28",
+      "caption": "PNN interface captured from C:\\Users\\Yunus-Emre\\Desktop\\portable_agent_kit\\projects\\PNN\\studio.html",
+      "commit": "70d7c48184f1de1c15226fe0bcd34bd2ed7ef9ae",
+      "taken_at": "2026-10-28",
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "status": "approved",
+      "review": {
+        "status": "approved",
+        "reviewer": "subagent:vision-review",
+        "method": "vision",
+        "notes": "2026-10-28-studio.png \u2014 real dashboard UI 'PNN Discovery Studio & Preclinical Dashboard' with cards and charts.",
+        "score": 92,
+        "reviewed_at": "2026-10-28T08:10:42"
+      }
+    }
+  ]
+}
