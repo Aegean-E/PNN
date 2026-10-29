@@ -10,7 +10,7 @@
 - **Total Classes**: `88`
 - **Total Top-Level Functions**: `208`
 - **Total Class Methods**: `239`
-- **Total Source Lines**: `12683`
+- **Total Source Lines**: `12695`
 
 ---
 
@@ -62,7 +62,7 @@
 ### [`pnn/bioisostere.py`](pnn/bioisostere.py)
 > *Bioisosteric replacement and metabolic soft-spot optimization engine for PNN.*
 
-**Size**: `526` lines (`19664` bytes)
+**Size**: `533` lines (`19895` bytes)
 
 **Classes:**
 - `class BioisostereError` - *Raised when compound SMILES or bioisosteric transformation rules are invalid.*
@@ -210,7 +210,7 @@
 ### [`pnn/ind.py`](pnn/ind.py)
 > *Allometric human clinical dose projection and IND regulatory dossier compiler for PNN.*
 
-**Size**: `602` lines (`25653` bytes)
+**Size**: `597` lines (`25577` bytes)
 
 **Classes:**
 - `class IndError` - *Raised when clinical projection inputs violate regulatory or pharmacological contracts.*
@@ -236,7 +236,7 @@
 ### [`pnn/mpo.py`](pnn/mpo.py)
 > *Phase 5 Multiparametric Optimization (MPO) and candidate profiling engine for PNN.*
 
-**Size**: `458` lines (`18984` bytes)
+**Size**: `463` lines (`19141` bytes)
 
 **Classes:**
 - `class MpoError` - *Raised when MPO input data is invalid or missing required metrics.*
@@ -293,7 +293,7 @@
 ### [`pnn/preclinical.py`](pnn/preclinical.py)
 > *Phase 4 in vivo pharmacokinetics (PK), pharmacodynamics (PD), and preclinical candidate selection for PNN.*
 
-**Size**: `558` lines (`24172` bytes)
+**Size**: `558` lines (`24181` bytes)
 
 **Classes:**
 - `class PreclinicalError` - *Raised when in vivo preclinical data is malformed or violates contract.*
@@ -495,7 +495,7 @@
 ### [`pnn/studio.py`](pnn/studio.py)
 > *Interactive Lead & Assay Visualization Studio and Standalone HTML Dashboard for PNN.*
 
-**Size**: `1112` lines (`44582` bytes)
+**Size**: `1117` lines (`44761` bytes)
 
 **Classes:**
 - `class StudioError` - *Raised when studio inputs are malformed or missing required data.*
