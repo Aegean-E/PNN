@@ -19,38 +19,6 @@
   },
   "checkpoints": [
     {
-      "task_id": "pnn-studio-and-targets-v1",
-      "phase": "phase 3",
-      "phase_num": 3,
-      "description": "[2/3] done: upgraded studio.html with IND dossier, safety pharmacology, circuit dynamics SVG, and target invariants; anchored runner paths; 197/197 tests pass",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792877425.428189,
-      "timestamp_str": "2026-10-25 00:30:25",
-      "agent": "antigravity:a829958c"
-    },
-    {
-      "task_id": "pnn-studio-and-targets-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "checklists: passed. Delivered endogenous aggrecanase target profiles (ADAMTS-4 and MMP-9), interactive studio.html translational integration (IND dossier, safety pharmacology, 14-day pulsatile circuit dynamics SVG, target invariants), and directory-independent turnkey runner. 197/197 tests pass, 4/4 gates pass (ADR-011).",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792877469.589638,
-      "timestamp_str": "2026-10-25 00:31:09",
-      "agent": "antigravity:a829958c"
-    },
-    {
-      "task_id": "pnn-studio-and-targets-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-studio-and-targets-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792877525.03275,
-      "timestamp_str": "2026-10-25 00:32:05",
-      "agent": "antigravity:a829958c"
-    },
-    {
       "task_id": "pnn-studio-polymorphic-fields-v1",
       "phase": "planning",
       "phase_num": 2,
@@ -253,6 +221,39 @@
       "status": "suspended",
       "timestamp": 1793295187.597368,
       "timestamp_str": "2026-10-29 20:33:07",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 12",
+      "phase_num": 3,
+      "description": "Reforge stage 12: run resumed",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793295299.5456154,
+      "timestamp_str": "2026-10-29 20:34:59",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 13",
+      "phase_num": 3,
+      "description": "Reforge stage 13: window 35, 1 commit(s), 0 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793295330.734544,
+      "timestamp_str": "2026-10-29 20:35:30",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 13",
+      "phase_num": 3,
+      "description": "Reforge stage 13: run stopped at stage 13; resume it with `reforge resume`",
+      "files_affected": [],
+      "status": "suspended",
+      "timestamp": 1793295349.9590075,
+      "timestamp_str": "2026-10-29 20:35:49",
       "agent": "opencode"
     }
   ]
