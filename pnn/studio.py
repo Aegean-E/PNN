@@ -286,9 +286,14 @@ def generate_circuit_dynamics_svg(
     parsed_pts: List[Tuple[float, float, float]] = []
     for pt in simulation_points:
         try:
-            t = float(_get_field(pt, ["time_h", "time", "t_h"], 0.0))
-            pnn = float(_get_field(pt, ["pnn_density_pct", "pnn_density", "pnn"], 100.0))
-            akt = float(_get_field(pt, ["akt_signaling_pct", "akt_signaling", "akt"], 45.0))
+            t_raw = _get_field(pt, ["time_h", "time", "t_h"], None)
+            pnn_raw = _get_field(pt, ["pnn_density_pct", "pnn_density", "pnn"], None)
+            akt_raw = _get_field(pt, ["akt_signaling_pct", "akt_signaling", "akt"], None)
+            if t_raw is None or pnn_raw is None or akt_raw is None:
+                continue
+            t = float(t_raw)
+            pnn = float(pnn_raw)
+            akt = float(akt_raw)
             parsed_pts.append((t, pnn, akt))
         except (ValueError, TypeError):
             continue
@@ -502,7 +507,7 @@ def render_studio_html(
                 cyp = "-"
 
             geno = html.escape(str(_get_field(row, ["genotoxicity"], "-")))
-            geno_cls = "badge-safe" if geno == "NEGATIVE" else "badge-fail"
+            geno_cls = "badge-safe" if geno == "NEGATIVE" else ("badge-fail" if geno == "POSITIVE" else "badge-caution")
             safety_rows.append(f"""
             <tr>
               <td><strong>{cid}</strong></td>
@@ -587,7 +592,7 @@ def render_studio_html(
     if circuit_svg:
         circuit_section = f"""
     <div class="panel" style="margin-bottom: 24px;">
-      <h2>Hypothalamic Circuit Dosing Dynamics (14-Day Pulsatile Regimen) <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">Purple: PNN Density (%) | Cyan: pAKT Signaling (%) | Red: 30% Safety Floor</span></h2>
+      <h2>Hypothalamic Circuit Dosing Dynamics <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">Purple: PNN Density (%) | Cyan: pAKT Signaling (%) | Red: 30% Safety Floor</span></h2>
       <div class="svg-wrapper">
         {circuit_svg}
       </div>
@@ -1095,8 +1100,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     except StudioError as exc:
         print(f"What: {exc}", file=sys.stderr)
-        print("Why: Studio requires valid compound inputs with molecular properties.", file=sys.stderr)
-        print("Fix: verify that the compound dataset exists and contains expected columns.", file=sys.stderr)
+        print("Why: Studio could not load one of the requested input datasets.", file=sys.stderr)
+        print("Fix: verify each supplied path and its CSV columns, then rerun.", file=sys.stderr)
         return 1
     except OSError as exc:
         print(f"What: {exc}", file=sys.stderr)

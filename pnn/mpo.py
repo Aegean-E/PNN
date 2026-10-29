@@ -356,10 +356,15 @@ def run_mpo_analysis(
     profiles: List[MpoProfile] = []
     for cid, row in raw_compounds.items():
         name = row.get("name", cid)
-        mw = _parse_opt_float(row.get("mw")) or 300.0
-        logp = _parse_opt_float(row.get("logp")) or 2.0
-        tpsa = _parse_opt_float(row.get("tpsa")) or 50.0
-        hbd = int(_parse_opt_float(row.get("hbd")) or 1)
+        mw = _parse_opt_float(row.get("mw"))
+        logp = _parse_opt_float(row.get("logp"))
+        tpsa = _parse_opt_float(row.get("tpsa"))
+        hbd = _parse_opt_float(row.get("hbd"))
+        if None in (mw, logp, tpsa, hbd):
+            raise MpoError(
+                f"Compound {cid} lacks mw/logp/tpsa/hbd required for MPO profiling"
+            )
+        hbd = int(hbd)
         pka = _parse_opt_float(row.get("pka"))
 
         # In vitro & in vivo properties

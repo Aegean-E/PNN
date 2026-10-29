@@ -547,15 +547,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             tox_path=Path(args.tox) if args.tox else None,
         )
 
-        lead_id = args.lead or next(
-            (
-                row["compound_id"]
-                for row in records
-                if row["compound_id"] in pk_data
-            ),
-            records[0]["compound_id"] if records else "",
-        )
-        projections = project_clinical_candidates(records, pk_data, lead_id=lead_id)
+        projections = project_clinical_candidates(records, pk_data)
+        lead_id = args.lead or (projections[0].compound_id if projections else "")
+        if args.lead:
+            projections = project_clinical_candidates(records, pk_data, lead_id=lead_id)
         out_path = Path(args.out)
         write_csv(out_path, DOSE_PROJECTION_FIELDS, [p.as_row() for p in projections])
 

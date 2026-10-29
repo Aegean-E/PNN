@@ -439,12 +439,19 @@ def run_bioisostere_pipeline(
             if target_parent_id and cid != target_parent_id:
                 continue
 
-            mw = _parse_opt_float(row.get(norm.get("mw", ""))) or 300.0
-            logp = _parse_opt_float(row.get(norm.get("logp", ""))) or 2.0
-            tpsa = _parse_opt_float(row.get(norm.get("tpsa", ""))) or 50.0
-            hbd = int(_parse_opt_float(row.get(norm.get("hbd", ""))) or 1)
-            hba = int(_parse_opt_float(row.get(norm.get("hba", ""))) or 3)
-            rotb = int(_parse_opt_float(row.get(norm.get("rotatable_bonds", ""))) or 3)
+            mw = _parse_opt_float(row.get(norm.get("mw", "")))
+            logp = _parse_opt_float(row.get(norm.get("logp", "")))
+            tpsa = _parse_opt_float(row.get(norm.get("tpsa", "")))
+            hbd = _parse_opt_float(row.get(norm.get("hbd", "")))
+            hba = _parse_opt_float(row.get(norm.get("hba", "")))
+            rotb = _parse_opt_float(row.get(norm.get("rotatable_bonds", "")))
+            if None in (mw, logp, tpsa, hbd, hba, rotb):
+                raise BioisostereError(
+                    f"Compound {cid} lacks properties required for bioisostere deltas"
+                )
+            hbd = int(hbd)
+            hba = int(hba)
+            rotb = int(rotb)
             pka = _parse_opt_float(row.get(norm.get("pka", "")))
 
             all_analogs.extend(

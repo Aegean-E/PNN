@@ -382,9 +382,9 @@ def evaluate_candidates(
         elif (
             kp_brain is not None
             and kp_brain >= min_kp_brain
-            and (oral_f is None or oral_f >= min_oral_f_pct)
-            and (wfa_red is None or wfa_red >= min_wfa_reduction_pct)
-            and (itt_imp is None or itt_imp >= min_itt_improvement_pct)
+            and oral_f is not None and oral_f >= min_oral_f_pct
+            and wfa_red is not None and wfa_red >= min_wfa_reduction_pct
+            and itt_imp is not None and itt_imp >= min_itt_improvement_pct
         ):
             status = "CLINICAL_CANDIDATE"
         else:

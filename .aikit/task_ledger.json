@@ -19,153 +19,6 @@
   },
   "checkpoints": [
     {
-      "task_id": "pnn-advanced-translational-platform-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-advanced-translational-platform-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792861644.2817523,
-      "timestamp_str": "2026-10-24 20:07:24",
-      "agent": "unidentified"
-    },
-    {
-      "task_id": "pnn-advanced-translational-platform-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "checklists: passed. Delivered advanced translational platform: hypothalamic circuit ODE dosing simulator (pnn.pathway), human allometric IND projection and regulatory dossier compiler (pnn.ind), bioisostere generation and liability shielding (pnn.bioisostere), and MD trajectory stability analysis (pnn.dynamics). 153/153 tests pass, 4/4 gates pass.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792861684.3051913,
-      "timestamp_str": "2026-10-24 20:08:04",
-      "agent": "unidentified"
-    },
-    {
-      "task_id": "pnn-advanced-translational-platform-v1",
-      "phase": "completed",
-      "phase_num": 5,
-      "description": "Task 'pnn-advanced-translational-platform-v1' completed successfully.",
-      "status": "completed",
-      "timestamp": 1792861687.833516,
-      "timestamp_str": "2026-10-24 20:08:07",
-      "agent": "unidentified"
-    },
-    {
-      "task_id": "pnn-ind-enabling-safety-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Implement IND-enabling safety pharmacology and repeat-dose toxicology assessment engine (pnn/safety.py) with CLI, contracts and report",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792865432.187584,
-      "timestamp_str": "2026-10-24 21:10:32",
-      "agent": "kilo:cli",
-      "impact_assessment": {
-        "why": "The roadmap's Week 29-36 IND-enabling package still lacks an executable safety assessment: existing modules cover efficacy, PK/PD, allometric dose projection and dynamics, but repeat-dose NOAEL studies, hERG/CYP liabilities and genotoxicity results are not ingested or judged against progression criteria.",
-        "benefits": "A deterministic, auditable safety gate that converts submitted GLP tox and safety pharmacology results into NOAEL HED, Phase 1 MRSD reconciliation, hERG/CYP margins and a SAFE/CAUTION/FAIL status, so a nominated candidate cannot reach the IND dossier without an explicit safety record.",
-        "risks": "contract: new CSV schemas for repeat-dose tox and safety pharmacology plus a new assessment CSV/JSON/report; dependency: none, standard library only; concurrency: atomic writers, no shared state; state: no persisted state beyond generated artifacts.",
-        "mitigation": "Freeze both CSV schemas in a doc and ADR-009, reuse the established triage/evidence-gap language (G-001), keep the module pure and deterministic, and cover parsing boundaries, missing evidence, each failure mode and CLI errors with tests."
-      }
-    },
-    {
-      "task_id": "pnn-ind-enabling-safety-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 177 tests pass (24 new safety tests); 4/4 gates pass (test, hygiene, guidelines, secrets); pnn.safety CLI and turnkey runner verified; IND-009 safety checklist now unchecked requirements; checklists: passed; uncommitted pending authorization",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792866946.1446831,
-      "timestamp_str": "2026-10-24 21:35:46",
-      "agent": "kilo:cli"
-    },
-    {
-      "task_id": "pnn-ind-enabling-safety-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[4/4] Verification: 177 tests pass (24 new safety tests); 4/4 gates pass (test, hygiene, guidelines, secrets); pnn.safety CLI and turnkey runner verified; ADR-009 recorded; IND dossier safety items are now unchecked requirements; checklists: passed; uncommitted pending authorization",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792866968.6435423,
-      "timestamp_str": "2026-10-24 21:36:08",
-      "agent": "kilo:cli"
-    },
-    {
-      "task_id": "pnn-evidence-integrity-fixes-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Remove fabricated defaults and wire measured evidence through IND confirmation, bioisostere SMILES/property math, dynamics missing-data handling, and pathway metrics",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792867929.0343163,
-      "timestamp_str": "2026-10-24 21:52:09",
-      "agent": "kilo:cli",
-      "impact_assessment": {
-        "why": "Verification found that pnn.ind invents Kp/F/dose/NOAEL values when columns are absent, bioisostere emits invalid SMILES with wrong property deltas, dynamics reports a fabricated STABLE_POSE from missing columns, and pathway reports absolute AKT levels as restoration. The gates passed because tests only assert positivity and shape.",
-        "benefits": "Every reported number becomes traceable to an input column or is explicitly UNKNOWN; generated SMILES stay syntactically valid; missing MD evidence can no longer produce a stable verdict; regimen recommendations follow computed metrics instead of hardcoded text.",
-        "risks": "contract: IND CSV/report semantics change for absent data, dynamics gains an UNKNOWN class, pathway gains a baseline-relative field; dependency: none, standard library only; concurrency: unchanged atomic writers; state: no persisted state beyond generated artifacts.",
-        "mitigation": "Keep existing function signatures where callers rely on them, add explicit evidence statuses instead of silent fallbacks, cover each defect with a failing-first test, align prose docs with the implemented rules, and rerun the 4 Phase 4 gates plus the golden run."
-      }
-    },
-    {
-      "task_id": "pnn-ind-enabling-safety-v1",
-      "phase": "superseded",
-      "phase_num": 4,
-      "description": "Superseded by 'pnn-evidence-integrity-fixes-v1' without --complete or --reset",
-      "status": "superseded",
-      "timestamp": 1792867929.0343163,
-      "timestamp_str": "2026-10-24 21:52:09",
-      "agent": "kilo:cli"
-    },
-    {
-      "task_id": "pnn-evidence-integrity-fixes-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "[5/5] Verification: 190 tests pass; 4/4 gates pass (test, hygiene, guidelines, secrets); IND/dynamics/bioisostere/pathway defects fixed; lazy exports remove runpy warnings; IND MRSD reconciles with safety; ADR-010 recorded; checklists: passed; uncommitted pending authorization",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792870595.1670597,
-      "timestamp_str": "2026-10-24 22:36:35",
-      "agent": "kilo:cli"
-    },
-    {
-      "task_id": "pnn-hed-species-and-runner-fixes-v1",
-      "phase": "phase 2",
-      "phase_num": 2,
-      "description": "[1/5] Select the most sensitive species by NOAEL HED (not raw NOAEL), wire bioisostere/pathway to the measured lead, warn on unusable --candidates, and correct tests that locked in the raw-NOAEL bug",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792871168.111584,
-      "timestamp_str": "2026-10-24 22:46:08",
-      "agent": "kilo:cli",
-      "impact_assessment": {
-        "why": "Verification found that pnn.safety and pnn.ind rank species by raw mg/kg NOAEL, so dog always beats rat despite the 3x body-surface-area conversion. Three of five Phase 1 MRSD values were inflated about 2x, and the test suite asserted the wrong species, so the gate could not catch it. The one-click runner also skipped bioisostere generation for the real lead (which lives in the repurposing library) and simulated a hardcoded 10 mg/kg rather than the measured dose.",
-        "benefits": "Phase 1 starting doses now follow the correct most-sensitive-species HED, tests fail if the ranking regresses to raw NOAEL, the nominated lead actually receives bioisostere and dosing analyses, and an unusable --candidates file is reported instead of producing silent UNMEASURED output.",
-        "risks": "contract: MRSD and most_sensitive_species values change for every multi-species compound; dependency: none, standard library only; concurrency: unchanged atomic writers; state: no persisted state beyond generated artifacts.",
-        "mitigation": "Add a shared HED-based selection helper used by both pnn.safety and pnn.ind, update the tests to assert HED ordering with hand-computed values, keep IND/safety reconciliation asserted, and rerun all 4 Phase 4 gates plus the golden run."
-      }
-    },
-    {
-      "task_id": "pnn-evidence-integrity-fixes-v1",
-      "phase": "superseded",
-      "phase_num": 4,
-      "description": "Superseded by 'pnn-hed-species-and-runner-fixes-v1' without --complete or --reset",
-      "status": "superseded",
-      "timestamp": 1792871168.111584,
-      "timestamp_str": "2026-10-24 22:46:08",
-      "agent": "kilo:cli"
-    },
-    {
-      "task_id": "pnn-hed-species-and-runner-fixes-v1",
-      "phase": "phase 4",
-      "phase_num": 4,
-      "description": "checklists: passed. Delivered IND-enabling safety pharmacology package (pnn.safety), evidence integrity in translational modules (ADR-009, ADR-010), HED-based most sensitive species selection in NOAEL/MRSD calculations, and turnkey runner lead nomination. 192/192 tests pass, 4/4 gates pass.",
-      "files_affected": [],
-      "status": "in_progress",
-      "timestamp": 1792876546.131215,
-      "timestamp_str": "2026-10-25 00:15:46",
-      "agent": "unidentified",
-      "continued_from": "kilo:cli"
-    },
-    {
       "task_id": "pnn-hed-species-and-runner-fixes-v1",
       "phase": "completed",
       "phase_num": 5,
@@ -261,6 +114,151 @@
       "timestamp": 1792878402.7057836,
       "timestamp_str": "2026-10-25 00:46:42",
       "agent": "antigravity"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 1",
+      "phase_num": 3,
+      "description": "Reforge stage 1: window 3, 3 commit(s), 2 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793292520.6420486,
+      "timestamp_str": "2026-10-29 19:48:40",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 2",
+      "phase_num": 3,
+      "description": "Reforge stage 2: window 6, 3 commit(s), 2 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired, 1 binary not analysed",
+      "files_affected": [
+        "assets/social-preview.png"
+      ],
+      "status": "in_progress",
+      "timestamp": 1793292675.8847067,
+      "timestamp_str": "2026-10-29 19:51:15",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 3",
+      "phase_num": 3,
+      "description": "Reforge stage 3: window 9, 3 commit(s), 2 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired, 5 binary not analysed",
+      "files_affected": [
+        "assets/artwork.jpg",
+        "assets/logo.jpg",
+        "assets/logo.png",
+        "assets/social-preview.jpg",
+        "assets/social-preview.png"
+      ],
+      "status": "in_progress",
+      "timestamp": 1793292723.0706618,
+      "timestamp_str": "2026-10-29 19:52:03",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 4",
+      "phase_num": 3,
+      "description": "Reforge stage 4: window 12, 3 commit(s), 3 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired, 1 binary not analysed",
+      "files_affected": [
+        "assets/social-preview.png"
+      ],
+      "status": "in_progress",
+      "timestamp": 1793292753.381828,
+      "timestamp_str": "2026-10-29 19:52:33",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 5",
+      "phase_num": 3,
+      "description": "Reforge stage 5: window 15, 3 commit(s), 11 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired, 2 binary not analysed",
+      "files_affected": [
+        "assets/screenshots/2026-10-28-studio.png",
+        "assets/social-preview.png"
+      ],
+      "status": "in_progress",
+      "timestamp": 1793292797.931544,
+      "timestamp_str": "2026-10-29 19:53:17",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 6",
+      "phase_num": 3,
+      "description": "Reforge stage 6: window 18, 3 commit(s), 6 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793293040.5325875,
+      "timestamp_str": "2026-10-29 19:57:20",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 7",
+      "phase_num": 3,
+      "description": "Reforge stage 7: window 21, 3 commit(s), 33 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793293283.7609837,
+      "timestamp_str": "2026-10-29 20:01:23",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 8",
+      "phase_num": 3,
+      "description": "Reforge stage 8: window 24, 3 commit(s), 23 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793293729.9361367,
+      "timestamp_str": "2026-10-29 20:08:49",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 9",
+      "phase_num": 3,
+      "description": "Reforge stage 9: window 27, 3 commit(s), 38 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793293928.0742493,
+      "timestamp_str": "2026-10-29 20:12:08",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 10",
+      "phase_num": 3,
+      "description": "Reforge stage 10: window 30, 3 commit(s), 15 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793294023.9716554,
+      "timestamp_str": "2026-10-29 20:13:43",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 11",
+      "phase_num": 3,
+      "description": "Reforge stage 11: window 31, 1 commit(s), 17 file(s) reviewed (unreviewed), 0 finding(s), 0 repaired",
+      "files_affected": [],
+      "status": "in_progress",
+      "timestamp": 1793294081.6693556,
+      "timestamp_str": "2026-10-29 20:14:41",
+      "agent": "opencode"
+    },
+    {
+      "task_id": "reforge:run-1",
+      "phase": "reforge stage 11",
+      "phase_num": 3,
+      "description": "Reforge stage 11: run stopped at stage 11; resume it with `reforge resume`",
+      "files_affected": [],
+      "status": "suspended",
+      "timestamp": 1793294128.358246,
+      "timestamp_str": "2026-10-29 20:15:28",
+      "agent": "opencode"
     }
   ]
 }
